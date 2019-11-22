@@ -1,110 +1,222 @@
-window.Assignment_Three_Scene = window.classes.Assignment_Three_Scene =
-class Assignment_Three_Scene extends Scene_Component
-  { constructor( context, control_box )     // The scene begins by requesting the camera, shapes, and materials it will need.
-      { super(   context, control_box );    // First, include a secondary Scene that provides movement controls:
-        if( !context.globals.has_controls   ) 
-          context.register_scene_component( new Movement_Controls( context, control_box.parentElement.insertCell() ) ); 
+import {tiny, defs} from './common.js';
+import Body from './body.js';
+import Simulation from './simulation.js';
+// Pull these names into this module's scope for convenience:
+const {
+    Vector, Vector3, vec, vec3, vec4, color, Matrix, Mat4, Light, Shape, Material, Shader, Texture, Scene,
+    Canvas_Widget, Code_Widget, Text_Widget
+} = tiny;
 
-        context.globals.graphics_state.camera_transform = Mat4.look_at( Vec.of( 0,10,20 ), Vec.of( 0,0,0 ), Vec.of( 0,1,0 ) );
-        this.initial_camera_location = Mat4.inverse( context.globals.graphics_state.camera_transform );
+// Now we have loaded everything in the files tiny-graphics.js, tiny-graphics-widgets.js, and common.js.
+// This yielded "tiny", an object wrapping the stuff in the first two files, and "defs" for wrapping all the rest.
 
-        const r = context.width/context.height;
-        context.globals.graphics_state.projection_transform = Mat4.perspective( Math.PI/4, r, .1, 1000 );
+// ******************** Extra step only for when executing on a local machine:
+//                      Load any more files in your directory and copy them into "defs."
+//                      (On the web, a server should instead just pack all these as well
+//                      as common.js into one file for you, such as "dependencies.js")
 
-        const shapes = { torus:  new Torus( 15, 15 ),
-                         torus2: new ( Torus.prototype.make_flat_shaded_version() )( 15, 15 )
- 
-                                // TODO:  Fill in as many additional shape instances as needed in this key/value table.
-                                //        (Requirement 1)
-                       }
-        this.submit_shapes( context, shapes );
-                                     
-                                     // Make some Material objects available to you:
-        this.materials =
-          { test:     context.get_instance( Phong_Shader ).material( Color.of( 1,1,0,1 ), { ambient:.2 } ),
-            ring:     context.get_instance( Ring_Shader  ).material()
+/*const Minimal_Webgl_Demo = defs.Minimal_Webgl_Demo;
+import {Axes_Viewer, Axes_Viewer_Test_Scene}
+    from "./examples/axes-viewer.js"
+import {Inertia_Demo, Collision_Demo}
+    from "./examples/collisions-demo.js"
+import {Many_Lights_Demo}
+    from "./examples/many-lights-demo.js"
+import {Obj_File_Demo}
+    from "./examples/obj-file-demo.js"
+import {Scene_To_Texture_Demo}
+    from "./examples/scene-to-texture-demo.js"
+import {Surfaces_Demo}
+    from "./examples/surfaces-demo.js"
+import {Text_Demo}
+    from "./examples/text-demo.js"
+import {Transforms_Sandbox}
+    from "./examples/transforms-sandbox.js"
 
-                                // TODO:  Fill in as many additional material objects as needed in this key/value table.
-                                //        (Requirement 1)
-          }
+Object.assign(defs,
+    {Axes_Viewer, Axes_Viewer_Test_Scene},
+    {Inertia_Demo, Collision_Demo},
+    {Many_Lights_Demo},
+    {Obj_File_Demo},
+    {Scene_To_Texture_Demo},
+    {Surfaces_Demo},
+    {Text_Demo},
+    {Transforms_Sandbox});*/
 
-        this.lights = [ new Light( Vec.of( 5,-10,5,1 ), Color.of( 0, 1, 1, 1 ), 1000 ) ];
-      }
-    make_control_panel()            // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-      { this.key_triggered_button( "View solar system",  [ "0" ], () => this.attached = () => this.initial_camera_location );
-        this.new_line();
-        this.key_triggered_button( "Attach to planet 1", [ "1" ], () => this.attached = () => this.planet_1 );
-        this.key_triggered_button( "Attach to planet 2", [ "2" ], () => this.attached = () => this.planet_2 ); this.new_line();
-        this.key_triggered_button( "Attach to planet 3", [ "3" ], () => this.attached = () => this.planet_3 );
-        this.key_triggered_button( "Attach to planet 4", [ "4" ], () => this.attached = () => this.planet_4 ); this.new_line();
-        this.key_triggered_button( "Attach to planet 5", [ "5" ], () => this.attached = () => this.planet_5 );
-        this.key_triggered_button( "Attach to moon",     [ "m" ], () => this.attached = () => this.moon     );
-      }
-    display( graphics_state )
-      { graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
-        const t = graphics_state.animation_time / 1000, dt = graphics_state.animation_delta_time / 1000;
+// ******************** End extra step
 
-        
+// (Can define Main_Scene's class here)
 
-        // TODO:  Fill in matrix operations and drawing code to draw the solar system scene (Requirements 2 and 3)
+class Main_Scene extends Simulation {
+    constructor() {
+        super();
 
+        this.textures = {
+            metal: new Texture("assets/textures/metal.jpg"),
+        };
 
-        this.shapes.torus2.draw( graphics_state, Mat4.identity(), this.materials.test );
+        this.shapes = {
+            "booster-nose": new defs.Shape_From_File("assets/objects/booster-nose.obj"),
+            "booster-body": new defs.Shape_From_File("assets/objects/booster-body.obj"),
+            "booster-engine": new defs.Shape_From_File("assets/objects/booster-engine.obj"),
+            "stage-2-body": new defs.Shape_From_File("assets/objects/stage-2-body.obj"),
+            "stage-2-engine": new defs.Shape_From_File("assets/objects/stage-2-engine.obj"),
+            "stage-3-body": new defs.Shape_From_File("assets/objects/stage-3-body.obj"),
+            "stage-3-engine": new defs.Shape_From_File("assets/objects/stage-3-engine.obj"),
+            "stage-4-body": new defs.Shape_From_File("assets/objects/stage-2-body.obj"),
+            "stage-4-engine": new defs.Shape_From_File("assets/objects/stage-2-engine.obj"),
+            "payload-fairing-half": new defs.Shape_From_File("assets/objects/payload-fairing-half.obj"),
+            "cloud-1": new defs.Shape_From_File("assets/objects/cloud1.obj"),
 
-      }
-  }
+        };
 
+        this.widget_options = {
+            show_explanation: false,
+            make_editor: false, make_code_nav: false
+        };
 
-// Extra credit begins here (See TODO comments below):
+        this.testMaterial = new Material(new defs.Phong_Shader(), {
+            color: color(.9, .9, .9, 1),
+            ambient: .4,
+            specularity: .2,
+            diffusivity: .4
+        });
 
-window.Ring_Shader = window.classes.Ring_Shader =
-class Ring_Shader extends Shader              // Subclasses of Shader each store and manage a complete GPU program.
-{ material() { return { shader: this } }      // Materials here are minimal, without any settings.
-  map_attribute_name_to_buffer_name( name )       // The shader will pull single entries out of the vertex arrays, by their data fields'
-    {                                             // names.  Map those names onto the arrays we'll pull them from.  This determines
-                                                  // which kinds of Shapes this Shader is compatible with.  Thanks to this function, 
-                                                  // Vertex buffers in the GPU can get their pointers matched up with pointers to 
-                                                  // attribute names in the GPU.  Shapes and Shaders can still be compatible even
-                                                  // if some vertex data feilds are unused. 
-      return { object_space_pos: "positions" }[ name ];      // Use a simple lookup table.
+        this.testMaterial2 = new Material(new defs.Textured_Phong(), {
+            color: color(0, 0, 0, 1),
+            ambient: 1,
+            specularity: .8,
+            diffusivity: .1,
+            texture: this.textures.metal,
+        })
+
+        this.cloud = new Material(new defs.Phong_Shader(), {
+            color: color(1, 1, 1, 1),
+            ambient: .6,
+            specularity: .1,
+            diffusivity: .3
+        });
+
+        this.bodies = [
+            new Body(
+                [this.shapes["stage-2-body"], this.shapes["stage-2-engine"]],
+                [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0)],
+                [this.testMaterial, this.testMaterial2],
+                vec3(1, 1, 1),
+                []
+            ).emplace(Mat4.translation(0, 0, 0), vec3(0, 0, 0), 0),
+            new Body(
+                [this.shapes["stage-3-body"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"]],
+                [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0), Mat4.translation(-2.5, 0, 0), Mat4.translation(-2.5, 0, +2.5), Mat4.translation(0, 0, +2.5)],
+                [this.testMaterial, this.testMaterial2, this.testMaterial2, this.testMaterial2, this.testMaterial2],
+                vec3(1, 1, 1),
+                []
+            ).emplace(Mat4.translation(0, 25, 0), vec3(0, 0, 0), 0),
+            new Body(
+                [this.shapes["stage-4-body"], this.shapes["stage-4-engine"]],
+                [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0)],
+                [this.testMaterial, this.testMaterial2],
+                vec3(1, 1, 1),
+                []
+            ).emplace(Mat4.translation(0, 50, 0), vec3(0, 0, 0), 0),
+            new Body(
+                [this.shapes["payload-fairing-half"], this.shapes["payload-fairing-half"]],
+                [Mat4.translation(0, 0, 0), Mat4.rotation(Math.PI, 0, 1, 0)],
+                [this.testMaterial, this.testMaterial2],
+                vec3(1, 1, 1),
+                []
+            ).emplace(Mat4.translation(0, 75
+                , 0), vec3(0, 0, 0), 0),
+            new Body(
+                [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
+                [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
+                [this.testMaterial, this.testMaterial, this.testMaterial2],
+                vec3(1, 1, 1),
+                []
+            ).emplace(Mat4.translation(-4.5, 0, 0), vec3(0, 0, 0), 0),
+            new Body(
+                [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
+                [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
+                [this.testMaterial, this.testMaterial, this.testMaterial2],
+                vec3(1, 1, 1),
+                []
+            ).emplace(Mat4.translation(4.5, 0, 0).times(Mat4.rotation(Math.PI, 0, 1, 0)), vec3(0, 0, 0), 0),
+            new Body(
+                [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
+                [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
+                [this.testMaterial, this.testMaterial, this.testMaterial2],
+                vec3(1, 1, 1),
+                []
+            ).emplace(Mat4.translation(4.5 / 2, 0, Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(2 * Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
+            new Body(
+                [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
+                [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
+                [this.testMaterial, this.testMaterial, this.testMaterial2],
+                vec3(1, 1, 1),
+                []
+            ).emplace(Mat4.translation(-4.5 / 2, 0, Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
+            new Body(
+                [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
+                [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
+                [this.testMaterial, this.testMaterial, this.testMaterial2],
+                vec3(1, 1, 1),
+                []
+            ).emplace(Mat4.translation(4.5 / 2, 0, -Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(4 * Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
+            new Body(
+                [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
+                [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
+                [this.testMaterial, this.testMaterial, this.testMaterial2],
+                vec3(1, 1, 1),
+                []
+            ).emplace(Mat4.translation(-4.5 / 2, 0, -Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(5 * Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
+        ]
+        ;
+        console.log(this.bodies)
     }
-    // Define how to synchronize our JavaScript's variables to the GPU's:
-  update_GPU( g_state, model_transform, material, gpu = this.g_addrs, gl = this.gl )
-      { const proj_camera = g_state.projection_transform.times( g_state.camera_transform );
-                                                                                        // Send our matrices to the shader programs:
-        gl.uniformMatrix4fv( gpu.model_transform_loc,             false, Mat.flatten_2D_to_1D( model_transform.transposed() ) );
-        gl.uniformMatrix4fv( gpu.projection_camera_transform_loc, false, Mat.flatten_2D_to_1D(     proj_camera.transposed() ) );
-      }
-  shared_glsl_code()            // ********* SHARED CODE, INCLUDED IN BOTH SHADERS *********
-    { return `precision mediump float;
-              varying vec4 position;
-              varying vec4 center;
-      `;
-    }
-  vertex_glsl_code()           // ********* VERTEX SHADER *********
-    { return `
-        attribute vec3 object_space_pos;
-        uniform mat4 model_transform;
-        uniform mat4 projection_camera_transform;
 
-        void main()
-        { 
-        }`;           // TODO:  Complete the main function of the vertex shader (Extra Credit Part II).
+    update_state(dt) {
+        //handle physics here: add -9.8 acceleration on everything unless it is at y=0, and handle acceleration for bodies based on rocket on/off
+        //we can do this either by force/mass (annoying) or by purely guessing accelerations (easy)
+        //only called once per frame, handle all bodies here
+        //handle collisions either at the beginning or end of this (trial and error)
+
+
     }
-  fragment_glsl_code()           // ********* FRAGMENT SHADER *********
-    { return `
-        void main()
-        { 
-        }`;           // TODO:  Complete the main function of the fragment shader (Extra Credit Part II).
+
+
+    display(context, program_state) {
+        //display bodies
+        super.display(context, program_state);
+
+        //can move this stuff to the constructor if it doesn't change by t (but it probably will)
+        program_state.lights = [new Light(vec4(.7, -.3, 2, 0), color(1, 1, 1, 1), 100000)];
+        if (!context.scratchpad.controls) {
+            this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
+            program_state.set_camera(Mat4.translation(-30, -30, -100));    // Locate the camera here (inverted matrix).
+        }
+        program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, 1, 10000);
+        const t = program_state.animation_time, dt = program_state.animation_delta_time;
+
+
+        //draw non physically animated shapes here
+        let model_transform = Mat4.identity();
+        this.shapes["cloud-1"].draw(context, program_state, Mat4.translation(50, 50, 0), this.cloud);
     }
 }
 
-window.Grid_Sphere = window.classes.Grid_Sphere =
-class Grid_Sphere extends Shape           // With lattitude / longitude divisions; this means singularities are at 
-  { constructor( rows, columns, texture_range )             // the mesh's top and bottom.  Subdivision_Sphere is a better alternative.
-      { super( "positions", "normals", "texture_coords" );
-        
+const
+    Additional_Scenes = [];
 
-                      // TODO:  Complete the specification of a sphere with lattitude and longitude lines
-                      //        (Extra Credit Part III)
-      } }
+export {
+    Main_Scene
+    ,
+    Additional_Scenes
+    ,
+    Canvas_Widget
+    ,
+    Code_Widget
+    ,
+    Text_Widget
+    ,
+    defs
+}
