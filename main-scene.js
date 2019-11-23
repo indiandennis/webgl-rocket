@@ -106,70 +106,70 @@ class Main_Scene extends Simulation {
                 [Mat4.translation(0, 0, 0), Mat4.rotation(Math.PI, 0, 1, 0)],
                 [this.rocket_material, this.rocket_material],
                 this.scale_factor,
-                []
+                [vec3(-4, 0, -4), vec3(-4, 0, 4), vec3(4, 0, 4), vec3(4, 0, -4), vec3(-4, 18, -4), vec3(-4, 18, 4), vec3(4, 18, 4), vec3(4, 18, -4)]
             ).emplace(Mat4.translation(0, 75, 0), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["stage-4-body"], this.shapes["stage-4-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0)],
                 [this.rocket_material, this.metal_material],
                 this.scale_factor,
-                []
+                [vec3(-3, -2, -3), vec3(-3, -2, 3), vec3(3, -2, 3), vec3(3, -2, -3), vec3(-3, 25, -3), vec3(-3, 25, 3), vec3(3, 25, 3), vec3(3, 25, -3)] //TODO: verify this is correct
             ).emplace(Mat4.translation(0, 50, 0), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["stage-3-body"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0), Mat4.translation(-2.5, 0, 0), Mat4.translation(-2.5, 0, +2.5), Mat4.translation(0, 0, +2.5)],
                 [this.rocket_material, this.metal_material, this.metal_material, this.metal_material, this.metal_material],
                 this.scale_factor,
-                []
+                [vec3(-3, -1, -3), vec3(-3, -1, 3), vec3(3, -1, 3), vec3(3, -1, -3), vec3(-3, 25, -3), vec3(-3, 25, 3), vec3(3, 25, 3), vec3(3, 25, -3)]
             ).emplace(Mat4.translation(0, 25, 0), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["stage-2-body"], this.shapes["stage-2-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0)],
                 [this.rocket_material, this.metal_material],
                 this.scale_factor,
-                []
+                [vec3(-3, -2, -3), vec3(-3, -2, 3), vec3(3, -2, 3), vec3(3, -2, -3), vec3(-3, 25, -3), vec3(-3, 25, 3), vec3(3, 25, 3), vec3(3, 25, -3)]
             ).emplace(Mat4.translation(0, 0, 0), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
                 [this.rocket_material, this.rocket_material, this.metal_material],
                 this.scale_factor,
-                []
+                [vec3(-1.5, -1, -1.5), vec3(-1.5, -1, 1.5), vec3(1.5, -1, 1.5), vec3(1.5, -1, -1.5), vec3(-1.5, 24, -1.5), vec3(-1.5, 24, 1.5), vec3(1.5, 24, 1.5), vec3(1.5, 24, -1.5)]
             ).emplace(Mat4.translation(-4.5, 0, 0), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
                 [this.rocket_material, this.rocket_material, this.metal_material],
                 this.scale_factor,
-                []
+                [vec3(-1.5, -1, -1.5), vec3(-1.5, -1, 1.5), vec3(1.5, -1, 1.5), vec3(1.5, -1, -1.5), vec3(-1.5, 24, -1.5), vec3(-1.5, 24, 1.5), vec3(1.5, 24, 1.5), vec3(1.5, 24, -1.5)]
             ).emplace(Mat4.translation(4.5, 0, 0).times(Mat4.rotation(Math.PI, 0, 1, 0)), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
                 [this.rocket_material, this.rocket_material, this.metal_material],
                 this.scale_factor,
-                []
+                [vec3(-1.5, -1, -1.5), vec3(-1.5, -1, 1.5), vec3(1.5, -1, 1.5), vec3(1.5, -1, -1.5), vec3(-1.5, 24, -1.5), vec3(-1.5, 24, 1.5), vec3(1.5, 24, 1.5), vec3(1.5, 24, -1.5)]
             ).emplace(Mat4.translation(4.5 / 2, 0, Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(2 * Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
                 [this.rocket_material, this.rocket_material, this.metal_material],
                 this.scale_factor,
-                []
+                [vec3(-1.5, -1, -1.5), vec3(-1.5, -1, 1.5), vec3(1.5, -1, 1.5), vec3(1.5, -1, -1.5), vec3(-1.5, 24, -1.5), vec3(-1.5, 24, 1.5), vec3(1.5, 24, 1.5), vec3(1.5, 24, -1.5)]
             ).emplace(Mat4.translation(-4.5 / 2, 0, Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
                 [this.rocket_material, this.rocket_material, this.metal_material],
                 this.scale_factor,
-                []
+                [vec3(-1.5, -1, -1.5), vec3(-1.5, -1, 1.5), vec3(1.5, -1, 1.5), vec3(1.5, -1, -1.5), vec3(-1.5, 24, -1.5), vec3(-1.5, 24, 1.5), vec3(1.5, 24, 1.5), vec3(1.5, 24, -1.5)]
             ).emplace(Mat4.translation(4.5 / 2, 0, -Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(4 * Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
                 [this.rocket_material, this.rocket_material, this.metal_material],
                 this.scale_factor,
-                []
+                [vec3(-1.5, -1, -1.5), vec3(-1.5, -1, 1.5), vec3(1.5, -1, 1.5), vec3(1.5, -1, -1.5), vec3(-1.5, 24, -1.5), vec3(-1.5, 24, 1.5), vec3(1.5, 24, 1.5), vec3(1.5, 24, -1.5)]
             ).emplace(Mat4.translation(-4.5 / 2, 0, -Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(5 * Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
         ];
         console.log(this.bodies)
