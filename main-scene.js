@@ -53,10 +53,12 @@ class Main_Scene extends Simulation {
 
         this.textures = {
             metal: new Texture("assets/textures/metal.jpg"),
+            earth: new Texture("assets/textures/earth.png", "LINEAR_MIPMAP_LINEAR"),
         };
 
         this.shapes = {
             "sphere": new defs.Subdivision_Sphere(8),
+            "earth": new defs.Shape_From_File("assets/objects/earth.obj"),
             "booster-nose": new defs.Shape_From_File("assets/objects/booster-nose.obj"),
             "booster-body": new defs.Shape_From_File("assets/objects/booster-body.obj"),
             "booster-engine": new defs.Shape_From_File("assets/objects/booster-engine.obj"),
@@ -97,6 +99,14 @@ class Main_Scene extends Simulation {
             specularity: .1,
             diffusivity: .3
         });
+
+        this.earth_material = new Material(new defs.Textured_Phong(), {
+            color: color(.05, .05, .05, 1),
+            ambient: 1,
+            specularity: 0,
+            diffusivity: 1,
+            texture: this.textures.earth,
+        })
 
         this.scale_factor = vec3(1, 1, 1);
 
@@ -194,10 +204,16 @@ class Main_Scene extends Simulation {
         super.display(context, program_state);
 
         //can move this stuff to the constructor if it doesn't change by t (but it probably will)
-        program_state.lights = [new Light(vec4(.7, -.3, 2, 0), color(1, 1, 1, 1), 10000)];
+        program_state.lights = [new Light(vec4(.7, -.3, 2, 0), color(1, 1, 1, 1), 10000)]; //TODO: definitely change this position to sun
         if (!context.scratchpad.controls) {
             this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
-            program_state.set_camera(Mat4.translation(-30, -30, -100));    // Locate the camera here (inverted matrix).
+
+            // Locate the camera here (inverted matrix).
+            //view origin
+            //program_state.set_camera(Mat4.translation(-30, -30, -100));
+
+            //view earth
+            program_state.set_camera(Mat4.translation(0, 1000, -50000));
         }
         program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, 1, 100000);
         const t = program_state.animation_time, dt = program_state.animation_delta_time;
@@ -206,7 +222,8 @@ class Main_Scene extends Simulation {
         //draw non physically animated shapes here
         let model_transform = Mat4.identity();
         this.shapes["cloud-1"].draw(context, program_state, Mat4.translation(50, 5000, 0).times(Mat4.scale(10, 10, 10)), this.cloud);
-        this.shapes["sphere"].draw(context, program_state, Mat4.translation(0, -63100, 0).times(Mat4.scale(63100, 63100, 63100)), this.cloud);
+        //this.shapes["sphere"].draw(context, program_state, Mat4.translation(0, -63100, 0).times(Mat4.scale(63100, 63100, 63100)), this.cloud);
+        this.shapes["sphere"].draw(context, program_state, Mat4.translation(0, -63100, 0).times(Mat4.scale(63100, 63100, 63100)), this.earth_material);
     }
 }
 
