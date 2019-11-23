@@ -8,9 +8,9 @@ const {
 class Body {                                   // **Body** can store and update the properties of a 3D body that incrementally
                                                // moves from its previous place due to velocities.  It conforms to the
                                                // approach outlined in the "Fix Your Timestep!" blog post by Glenn Fiedler.
-    constructor(shapes, relative_locations, materials, size, children = [], hitbox) {
+    constructor(shapes, relative_locations, materials, size, hitbox, children = []) {
         Object.assign(this,
-            {shapes, relative_locations, materials, size, hitbox, children})
+            {shapes, relative_locations, materials, size, children, hitbox})
     }
 
     emplace(location_matrix, linear_velocity, angular_velocity, spin_axis = vec3(0, 1, 0).normalized()) {                               // emplace(): assign the body's initial values, or overwrite them.

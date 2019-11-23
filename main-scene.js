@@ -56,6 +56,7 @@ class Main_Scene extends Simulation {
         };
 
         this.shapes = {
+            "sphere": new defs.Subdivision_Sphere(8),
             "booster-nose": new defs.Shape_From_File("assets/objects/booster-nose.obj"),
             "booster-body": new defs.Shape_From_File("assets/objects/booster-body.obj"),
             "booster-engine": new defs.Shape_From_File("assets/objects/booster-engine.obj"),
@@ -75,14 +76,14 @@ class Main_Scene extends Simulation {
             make_editor: false, make_code_nav: false
         };
 
-        this.testMaterial = new Material(new defs.Phong_Shader(), {
+        this.rocket_material = new Material(new defs.Phong_Shader(), {
             color: color(.9, .9, .9, 1),
             ambient: .4,
             specularity: .2,
             diffusivity: .4
         });
 
-        this.testMaterial2 = new Material(new defs.Textured_Phong(), {
+        this.metal_material = new Material(new defs.Textured_Phong(), {
             color: color(0, 0, 0, 1),
             ambient: 1,
             specularity: .8,
@@ -97,81 +98,85 @@ class Main_Scene extends Simulation {
             diffusivity: .3
         });
 
+        this.scale_factor = vec3(1, 1, 1);
+
         this.bodies = [
-            new Body(
-                [this.shapes["stage-2-body"], this.shapes["stage-2-engine"]],
-                [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0)],
-                [this.testMaterial, this.testMaterial2],
-                vec3(1, 1, 1),
-                []
-            ).emplace(Mat4.translation(0, 0, 0), vec3(0, 0, 0), 0),
-            new Body(
-                [this.shapes["stage-3-body"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"]],
-                [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0), Mat4.translation(-2.5, 0, 0), Mat4.translation(-2.5, 0, +2.5), Mat4.translation(0, 0, +2.5)],
-                [this.testMaterial, this.testMaterial2, this.testMaterial2, this.testMaterial2, this.testMaterial2],
-                vec3(1, 1, 1),
-                []
-            ).emplace(Mat4.translation(0, 25, 0), vec3(0, 0, 0), 0),
-            new Body(
-                [this.shapes["stage-4-body"], this.shapes["stage-4-engine"]],
-                [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0)],
-                [this.testMaterial, this.testMaterial2],
-                vec3(1, 1, 1),
-                []
-            ).emplace(Mat4.translation(0, 50, 0), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["payload-fairing-half"], this.shapes["payload-fairing-half"]],
                 [Mat4.translation(0, 0, 0), Mat4.rotation(Math.PI, 0, 1, 0)],
-                [this.testMaterial, this.testMaterial2],
-                vec3(1, 1, 1),
+                [this.rocket_material, this.rocket_material],
+                this.scale_factor,
                 []
-            ).emplace(Mat4.translation(0, 75
-                , 0), vec3(0, 0, 0), 0),
+            ).emplace(Mat4.translation(0, 75, 0), vec3(0, 0, 0), 0),
+            new Body(
+                [this.shapes["stage-4-body"], this.shapes["stage-4-engine"]],
+                [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0)],
+                [this.rocket_material, this.metal_material],
+                this.scale_factor,
+                []
+            ).emplace(Mat4.translation(0, 50, 0), vec3(0, 0, 0), 0),
+            new Body(
+                [this.shapes["stage-3-body"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"]],
+                [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0), Mat4.translation(-2.5, 0, 0), Mat4.translation(-2.5, 0, +2.5), Mat4.translation(0, 0, +2.5)],
+                [this.rocket_material, this.metal_material, this.metal_material, this.metal_material, this.metal_material],
+                this.scale_factor,
+                []
+            ).emplace(Mat4.translation(0, 25, 0), vec3(0, 0, 0), 0),
+            new Body(
+                [this.shapes["stage-2-body"], this.shapes["stage-2-engine"]],
+                [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0)],
+                [this.rocket_material, this.metal_material],
+                this.scale_factor,
+                []
+            ).emplace(Mat4.translation(0, 0, 0), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
-                [this.testMaterial, this.testMaterial, this.testMaterial2],
-                vec3(1, 1, 1),
+                [this.rocket_material, this.rocket_material, this.metal_material],
+                this.scale_factor,
                 []
             ).emplace(Mat4.translation(-4.5, 0, 0), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
-                [this.testMaterial, this.testMaterial, this.testMaterial2],
-                vec3(1, 1, 1),
+                [this.rocket_material, this.rocket_material, this.metal_material],
+                this.scale_factor,
                 []
             ).emplace(Mat4.translation(4.5, 0, 0).times(Mat4.rotation(Math.PI, 0, 1, 0)), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
-                [this.testMaterial, this.testMaterial, this.testMaterial2],
-                vec3(1, 1, 1),
+                [this.rocket_material, this.rocket_material, this.metal_material],
+                this.scale_factor,
                 []
             ).emplace(Mat4.translation(4.5 / 2, 0, Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(2 * Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
-                [this.testMaterial, this.testMaterial, this.testMaterial2],
-                vec3(1, 1, 1),
+                [this.rocket_material, this.rocket_material, this.metal_material],
+                this.scale_factor,
                 []
             ).emplace(Mat4.translation(-4.5 / 2, 0, Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
-                [this.testMaterial, this.testMaterial, this.testMaterial2],
-                vec3(1, 1, 1),
+                [this.rocket_material, this.rocket_material, this.metal_material],
+                this.scale_factor,
                 []
             ).emplace(Mat4.translation(4.5 / 2, 0, -Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(4 * Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
-                [this.testMaterial, this.testMaterial, this.testMaterial2],
-                vec3(1, 1, 1),
+                [this.rocket_material, this.rocket_material, this.metal_material],
+                this.scale_factor,
                 []
             ).emplace(Mat4.translation(-4.5 / 2, 0, -Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(5 * Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
-        ]
-        ;
+        ];
         console.log(this.bodies)
+    }
+
+    make_control_panel() {                           // make_control_panel(): Create the buttons for using the viewer.
+        this.key_triggered_button("Detach", [" "], () => this.detach = true);
     }
 
     update_state(dt) {
@@ -189,18 +194,19 @@ class Main_Scene extends Simulation {
         super.display(context, program_state);
 
         //can move this stuff to the constructor if it doesn't change by t (but it probably will)
-        program_state.lights = [new Light(vec4(.7, -.3, 2, 0), color(1, 1, 1, 1), 100000)];
+        program_state.lights = [new Light(vec4(.7, -.3, 2, 0), color(1, 1, 1, 1), 10000)];
         if (!context.scratchpad.controls) {
             this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
             program_state.set_camera(Mat4.translation(-30, -30, -100));    // Locate the camera here (inverted matrix).
         }
-        program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, 1, 10000);
+        program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, 1, 100000);
         const t = program_state.animation_time, dt = program_state.animation_delta_time;
 
 
         //draw non physically animated shapes here
         let model_transform = Mat4.identity();
-        this.shapes["cloud-1"].draw(context, program_state, Mat4.translation(50, 50, 0), this.cloud);
+        this.shapes["cloud-1"].draw(context, program_state, Mat4.translation(50, 5000, 0).times(Mat4.scale(10, 10, 10)), this.cloud);
+        this.shapes["sphere"].draw(context, program_state, Mat4.translation(0, -63100, 0).times(Mat4.scale(63100, 63100, 63100)), this.cloud);
     }
 }
 
