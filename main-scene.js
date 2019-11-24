@@ -275,11 +275,12 @@ class Main_Scene extends Simulation {
 
             //view earth
             //program_state.set_camera(Mat4.translation(0, 1000, -50000));
+            program_state.set_camera(Mat4.inverse(Mat4.translation(this.bodies[0].center[0] * this.scale_factor[0], this.bodies[0].center[1] * this.scale_factor[1] - .1, this.bodies[0].center[2] * this.scale_factor[2] + 2)));
+
         }
         //comment the line below if you want a moveable camera that doesn't follow objects
-        program_state.set_camera(Mat4.inverse(Mat4.translation(this.bodies[0].center[0] * this.scale_factor[0], this.bodies[0].center[1] * this.scale_factor[1] - .1, this.bodies[0].center[2] * this.scale_factor[2] + 2)));
 
-        program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, 1, 20000000);
+        program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, .1, 20000000);
         const t = program_state.animation_time, dt = program_state.animation_delta_time;
 
 
@@ -287,7 +288,7 @@ class Main_Scene extends Simulation {
         let model_transform = Mat4.identity();
         this.shapes["cloud-1"].draw(context, program_state, Mat4.translation(50, 5000, 0).times(Mat4.scale(10, 10, 10)), this.cloud);
         //this.shapes["sphere"].draw(context, program_state, Mat4.translation(0, -63100, 0).times(Mat4.scale(63100, 63100, 63100)), this.cloud);
-        this.shapes["sphere"].draw(context, program_state, Mat4.translation(0, -63099, 0).times(Mat4.scale(63100, 63100, 63100)).times(Mat4.rotation(Math.PI / 2, 1, .5, 1)), this.earth_material);
+        this.shapes["sphere"].draw(context, program_state, Mat4.translation(0, -63098.84, 0).times(Mat4.scale(63100, 63100, 63100)).times(Mat4.rotation(Math.PI / 2, 1, .5, 1)), this.earth_material);
     }
 }
 
