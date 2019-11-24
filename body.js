@@ -13,14 +13,22 @@ class Body {                                   // **Body** can store and update 
             {shapes, relative_locations, materials, size, children, hitbox})
     }
 
-    emplace(location_matrix, linear_velocity, angular_velocity, spin_axis = vec3(0, 1, 0).normalized()) {                               // emplace(): assign the body's initial values, or overwrite them.
+    emplace(location_matrix, linear_velocity, angular_velocity, attached = true, spin_axis = vec3(0, 1, 0).normalized(), linear_acceleration = vec3(0, 0, 0), angular_acceleration = 0, activated = false) {                               // emplace(): assign the body's initial values, or overwrite them.
         this.center = location_matrix.times(vec4(0, 0, 0, 1)).to3();
         this.rotation = Mat4.translation(...this.center.times(-1)).times(location_matrix);
         this.previous = {center: this.center.copy(), rotation: this.rotation.copy()};
         // drawn_location gets replaced with an interpolated quantity:
         this.drawn_location = location_matrix;
         this.temp_matrix = Mat4.identity();
-        return Object.assign(this, {linear_velocity, angular_velocity, spin_axis})
+        this.attached = attached;
+        this.activated = activated;
+        return Object.assign(this, {
+            linear_velocity,
+            linear_acceleration,
+            angular_velocity,
+            angular_acceleration,
+            spin_axis
+        })
     }
 
     advance(time_amount) {                           // advance(): Perform an integration (the simplistic Forward Euler method) to
@@ -43,9 +51,9 @@ class Body {                                   // **Body** can store and update 
     blend_state(alpha) {                             // blend_state(): Compute the final matrix we'll draw using the previous two physical
         // locations the object occupied.  We'll interpolate between these two states as
         // described at the end of the "Fix Your Timestep!" blog post.
-        this.drawn_location = Mat4.translation(...this.previous.center.mix(this.center, alpha))
-            .times(this.blend_rotation(alpha))
-            .times(Mat4.scale(...this.size));
+        this.drawn_location = Mat4.scale(...this.size)
+            .times(Mat4.translation(...this.previous.center.mix(this.center, alpha)))
+            .times(this.blend_rotation(alpha));
     }
 
     // The following are our various functions for testing a single point,

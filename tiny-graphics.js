@@ -54,8 +54,8 @@ export const tiny = {};
 
 const Vector = tiny.Vector =
     class Vector extends Float32Array {                                   // **Vector** stores vectors of floating point numbers.  Puts vector math into JavaScript.
-                                                                          // Note:  Vectors should be created with of() due to wierdness with the TypedArray spec.
-                                                                          // Tip: Assign Vectors with .copy() to avoid referring two variables to the same Vector object.
+        // Note:  Vectors should be created with of() due to wierdness with the TypedArray spec.
+        // Tip: Assign Vectors with .copy() to avoid referring two variables to the same Vector object.
         static create(...arr) {
             return new Vector(arr);
         }
@@ -270,7 +270,7 @@ const Vector3 = tiny.Vector3 =
 
 const Vector4 = tiny.Vector4 =
     class Vector4 extends Float32Array {                                 // **Vector4** is a specialization of Vector only for size 4, for performance reasons.
-                                                                         // The fourth coordinate value is homogenized (0 for a vector, 1 for a point).
+        // The fourth coordinate value is homogenized (0 for a vector, 1 for a point).
         static create(x, y, z, w) {
             const v = new Vector4(4);
             v[0] = x;
@@ -510,7 +510,7 @@ const Matrix = tiny.Matrix =
 
 const Mat4 = tiny.Mat4 =
     class Mat4 extends Matrix {                                                   // **Mat4** generates special 4x4 matrices that are useful for graphics.
-                                                                                  // All the methods below return a certain 4x4 matrix.
+        // All the methods below return a certain 4x4 matrix.
         static identity() {
             return Matrix.of([1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]);
         };
@@ -608,12 +608,12 @@ const Mat4 = tiny.Mat4 =
 
 const Keyboard_Manager = tiny.Keyboard_Manager =
     class Keyboard_Manager {                        // **Keyboard_Manager** maintains a running list of which keys are depressed.  You can map combinations of
-                                                    // shortcut keys to trigger callbacks you provide by calling add().  See add()'s arguments.  The shortcut
-                                                    // list is indexed by convenient strings showing each bound shortcut combination.  The constructor
-                                                    // optionally takes "target", which is the desired DOM element for keys to be pressed inside of, and
-                                                    // "callback_behavior", which will be called for every key action and allows extra behavior on each event
-                                                    // -- giving an opportunity to customize their bubbling, preventDefault, and more.  It defaults to no
-                                                    // additional behavior besides the callback itself on each assigned key action.
+        // shortcut keys to trigger callbacks you provide by calling add().  See add()'s arguments.  The shortcut
+        // list is indexed by convenient strings showing each bound shortcut combination.  The constructor
+        // optionally takes "target", which is the desired DOM element for keys to be pressed inside of, and
+        // "callback_behavior", which will be called for every key action and allows extra behavior on each event
+        // -- giving an opportunity to customize their bubbling, preventDefault, and more.  It defaults to no
+        // additional behavior besides the callback itself on each assigned key action.
         constructor(target = document, callback_behavior = (callback, event) => callback(event)) {
             this.saved_controls = {};
             this.actively_pressed_keys = new Set();
@@ -662,8 +662,8 @@ const Keyboard_Manager = tiny.Keyboard_Manager =
 
 const Graphics_Card_Object = tiny.Graphics_Card_Object =
     class Graphics_Card_Object {                                       // ** Graphics_Card_Object** Extending this base class allows an object to
-                                                                       // copy itself onto a WebGL context on demand, whenever it is first used for
-                                                                       // a GPU draw command on a context it hasn't seen before.
+        // copy itself onto a WebGL context on demand, whenever it is first used for
+        // a GPU draw command on a context it hasn't seen before.
         constructor() {
             this.gpu_instances = new Map()
         }     // Track which GPU contexts this object has copied itself onto.
@@ -707,12 +707,12 @@ const Graphics_Card_Object = tiny.Graphics_Card_Object =
 
 const Vertex_Buffer = tiny.Vertex_Buffer =
     class Vertex_Buffer extends Graphics_Card_Object {                       // **Vertex_Buffer** organizes data related to one 3D shape and copies it into GPU memory.  That data
-                                                                             // is broken down per vertex in the shape.  To use, make a subclass of it that overrides the
-                                                                             // constructor and fills in the "arrays" property.  Within "arrays", you can make several fields that
-                                                                             // you can look up in a vertex; for each field, a whole array will be made here of that data type and
-                                                                             // it will be indexed per vertex.  Along with those lists is an additional array "indices" describing
-                                                                             // how vertices are connected to each other into shape primitives.  Primitives could includes
-                                                                             // triangles, expressed as triples of vertex indices.
+        // is broken down per vertex in the shape.  To use, make a subclass of it that overrides the
+        // constructor and fills in the "arrays" property.  Within "arrays", you can make several fields that
+        // you can look up in a vertex; for each field, a whole array will be made here of that data type and
+        // it will be indexed per vertex.  Along with those lists is an additional array "indices" describing
+        // how vertices are connected to each other into shape primitives.  Primitives could includes
+        // triangles, expressed as triples of vertex indices.
         constructor(...array_names) {                             // This superclass constructor expects a list of names of arrays that you plan for.
             super();
             [this.arrays, this.indices] = [{}, []];
@@ -721,10 +721,10 @@ const Vertex_Buffer = tiny.Vertex_Buffer =
         }
 
         copy_onto_graphics_card(context, selection_of_arrays = Object.keys(this.arrays), write_to_indices = true) {           // copy_onto_graphics_card():  Called automatically as needed to load this vertex array set onto
-            // one of your GPU contexts for its first time.  Send the completed vertex and index lists to
-            // their own buffers within any of your existing graphics card contexts.  Optional arguments
-            // allow calling this again to overwrite the GPU buffers related to this shape's arrays, or
-            // subsets of them as needed (if only some fields of your shape have changed).
+                                                                                                                              // one of your GPU contexts for its first time.  Send the completed vertex and index lists to
+                                                                                                                              // their own buffers within any of your existing graphics card contexts.  Optional arguments
+                                                                                                                              // allow calling this again to overwrite the GPU buffers related to this shape's arrays, or
+                                                                                                                              // subsets of them as needed (if only some fields of your shape have changed).
 
             // Define what this object should store in each new WebGL Context:
             const initial_gpu_representation = {webGL_buffer_pointers: {}};
@@ -776,8 +776,8 @@ const Vertex_Buffer = tiny.Vertex_Buffer =
 
 const Shape = tiny.Shape =
     class Shape extends Vertex_Buffer {           // **Shape** extends Vertex_Buffer to give it an awareness that it holds data about 3D space.  This class
-                                                  // is used the same way as Vertex_Buffer, by subclassing it and writing a constructor that fills in the
-                                                  // "arrays" property with some custom arrays.
+        // is used the same way as Vertex_Buffer, by subclassing it and writing a constructor that fills in the
+        // "arrays" property with some custom arrays.
 
         // Shape extends Vertex_Buffer's functionality for copying shapes into buffers the graphics card's memory,
         // adding the basic assumption that each vertex will have a 3D position and a 3D normal vector as available
@@ -880,11 +880,11 @@ const Shape = tiny.Shape =
 
 const Light = tiny.Light =
     class Light {                         // **Light** stores the properties of one light in a scene.  Contains a coordinate and a
-                                          // color (each are 4x1 Vectors) as well as one size scalar.
-                                          // The coordinate is homogeneous, and so is either a point or a vector.  Use w=0 for a
-                                          // vector (directional) light, and w=1 for a point light / spotlight.
-                                          // For spotlights, a light also needs a "size" factor for how quickly the brightness
-                                          // should attenuate (reduce) as distance from the spotlight increases.
+        // color (each are 4x1 Vectors) as well as one size scalar.
+        // The coordinate is homogeneous, and so is either a point or a vector.  Use w=0 for a
+        // vector (directional) light, and w=1 for a point light / spotlight.
+        // For spotlights, a light also needs a "size" factor for how quickly the brightness
+        // should attenuate (reduce) as distance from the spotlight increases.
         constructor(position, color, size) {
             Object.assign(this, {position, color, attenuation: 1 / size});
         }
@@ -893,9 +893,9 @@ const Light = tiny.Light =
 
 const Graphics_Addresses = tiny.Graphics_Addresses =
     class Graphics_Addresses {                           // **Graphics_Addresses** is used internally in Shaders for organizing communication with the GPU.
-                                                         // Once we've compiled the Shader, we can query some things about the compiled program, such as
-                                                         // the memory addresses it will use for uniform variables, and the types and indices of its per-
-                                                         // vertex attributes.  We'll need those for building vertex buffers.
+        // Once we've compiled the Shader, we can query some things about the compiled program, such as
+        // the memory addresses it will use for uniform variables, and the types and indices of its per-
+        // vertex attributes.  We'll need those for building vertex buffers.
         constructor(program, gl) {
             const num_uniforms = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
             for (let i = 0; i < num_uniforms; ++i) {                 // Retrieve the GPU addresses of each uniform variable in the shader
@@ -924,10 +924,10 @@ const Graphics_Addresses = tiny.Graphics_Addresses =
 
 const Container = tiny.Container =
     class Container {                   // **Container** allows a way to create patch JavaScript objects within a single line.  Some properties get
-                                        // replaced with substitutes that you provide, without having to write out a new object from scratch.
-                                        // To override, simply pass in "replacement", a JS Object of keys/values you want to override, to generate
-                                        // a new object.  For shorthand you can leave off the key and only provide a value (pass in directly as
-                                        // "replacement") and a guess will be used for which member you want overridden based on type.
+        // replaced with substitutes that you provide, without having to write out a new object from scratch.
+        // To override, simply pass in "replacement", a JS Object of keys/values you want to override, to generate
+        // a new object.  For shorthand you can leave off the key and only provide a value (pass in directly as
+        // "replacement") and a guess will be used for which member you want overridden based on type.
         override(replacement)                     // override(): Generate a copy by value, replacing certain properties.
         {
             return this.helper(replacement, Object.create(this.constructor.prototype))
@@ -953,9 +953,9 @@ const Container = tiny.Container =
 
 const Material = tiny.Material =
     class Material extends Container {                                       // **Material** contains messages for a shader program.  These configure the shader
-                                                                             // for the particular color and style of one shape being drawn.  A material consists
-                                                                             // of a pointer to the particular Shader it uses (to select that Shader for the draw
-                                                                             // command), as well as a collection of any options wanted by the shader.
+        // for the particular color and style of one shape being drawn.  A material consists
+        // of a pointer to the particular Shader it uses (to select that Shader for the draw
+        // command), as well as a collection of any options wanted by the shader.
         constructor(shader, options) {
             super();
             Object.assign(this, {shader}, options);
@@ -965,9 +965,9 @@ const Material = tiny.Material =
 
 const Shader = tiny.Shader =
     class Shader extends Graphics_Card_Object {                           // **Shader** loads a GLSL shader program onto your graphics card, starting from a JavaScript string.
-                                                                          // To use it, make subclasses of Shader that define these strings of GLSL code.  The base class will
-                                                                          // command the GPU to recieve, compile, and run these programs.  In WebGL 1, the shader runs once per
-                                                                          // every shape that is drawn onscreen.
+        // To use it, make subclasses of Shader that define these strings of GLSL code.  The base class will
+        // command the GPU to recieve, compile, and run these programs.  In WebGL 1, the shader runs once per
+        // every shape that is drawn onscreen.
 
         // Extend the class and fill in the abstract functions, some of which define GLSL strings, and others
         // (update_GPU) which define the extra custom JavaScript code needed to populate your particular shader
@@ -1096,9 +1096,9 @@ const Shader = tiny.Shader =
 
 const Texture = tiny.Texture =
     class Texture extends Graphics_Card_Object {                                             // **Texture** wraps a pointer to a new texture image where
-                                                                                             // it is stored in GPU memory, along with a new HTML image object.
-                                                                                             // This class initially copies the image to the GPU buffers,
-                                                                                             // optionally generating mip maps of it and storing them there too.
+        // it is stored in GPU memory, along with a new HTML image object.
+        // This class initially copies the image to the GPU buffers,
+        // optionally generating mip maps of it and storing them there too.
         constructor(filename, min_filter = "LINEAR_MIPMAP_LINEAR") {
             super();
             Object.assign(this, {filename, min_filter});
@@ -1151,10 +1151,10 @@ const Texture = tiny.Texture =
 
 const Program_State = tiny.Program_State =
     class Program_State extends Container {                                     // **Program_State** stores any values that affect how your whole scene is drawn,
-                                                                                // such as its current lights and the camera position.  Class Shader uses whatever
-                                                                                // values are wrapped here as inputs to your custom shader program.  Your Shader
-                                                                                // subclass must override its method "update_GPU()" to define how to send your
-                                                                                // Program_State's particular values over to your custom shader program.
+        // such as its current lights and the camera position.  Class Shader uses whatever
+        // values are wrapped here as inputs to your custom shader program.  Your Shader
+        // subclass must override its method "update_GPU()" to define how to send your
+        // Program_State's particular values over to your custom shader program.
         constructor(camera_transform = Mat4.identity(), projection_transform = Mat4.identity()) {
             super();
             this.set_camera(camera_transform);
@@ -1174,7 +1174,7 @@ const Program_State = tiny.Program_State =
 
 const Webgl_Manager = tiny.Webgl_Manager =
     class Webgl_Manager {                        // **Webgl_Manager** manages a whole graphics program for one on-page canvas, including its
-                                                 // textures, shapes, shaders, and scenes.  It requests a WebGL context and stores Scenes.
+        // textures, shapes, shaders, and scenes.  It requests a WebGL context and stores Scenes.
         constructor(canvas, background_color, dimensions) {
             const members = {
                 instances: new Map(),
@@ -1198,6 +1198,9 @@ const Webgl_Manager = tiny.Webgl_Manager =
             gl.enable(gl.DEPTH_TEST);                            // Enable Z-Buffering test.
             // Specify an interpolation method for blending "transparent" triangles over the existing pixels:
             gl.enable(gl.BLEND);
+
+            gl.enable(gl.CULL_FACE);
+            //gl.cullFace(gl.BACK);
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
             // Store a single red pixel, as a placeholder image to prevent a console warning:
             gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
@@ -1250,11 +1253,11 @@ const Webgl_Manager = tiny.Webgl_Manager =
 
 const Scene = tiny.Scene =
     class Scene {                           // **Scene** is the base class for any scene part or code snippet that you can add to a
-                                            // canvas.  Make your own subclass(es) of this and override their methods "display()"
-                                            // and "make_control_panel()" to make them draw to a canvas, or generate custom control
-                                            // buttons and readouts, respectively.  Scenes exist in a hierarchy; their child Scenes
-                                            // can either contribute more drawn shapes or provide some additional tool to the end
-                                            // user via drawing additional control panel buttons or live text readouts.
+        // canvas.  Make your own subclass(es) of this and override their methods "display()"
+        // and "make_control_panel()" to make them draw to a canvas, or generate custom control
+        // buttons and readouts, respectively.  Scenes exist in a hierarchy; their child Scenes
+        // can either contribute more drawn shapes or provide some additional tool to the end
+        // user via drawing additional control panel buttons or live text readouts.
         constructor() {
             this.children = [];
             // Set up how we'll handle key presses for the scene's control panel:

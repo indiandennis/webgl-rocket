@@ -163,10 +163,10 @@ const Subdivision_Sphere = defs.Subdivision_Sphere =
             const tetrahedron = [[0, 0, -1], [0, .9428, .3333], [-.8165, -.4714, .3333], [.8165, -.4714, .3333]];
             this.arrays.position = Vector3.cast(...tetrahedron);
             // Begin recursion:
-            this.subdivide_triangle(0, 1, 2, max_subdivisions);
-            this.subdivide_triangle(3, 2, 1, max_subdivisions);
-            this.subdivide_triangle(1, 0, 3, max_subdivisions);
-            this.subdivide_triangle(0, 2, 3, max_subdivisions);
+            this.subdivide_triangle(2, 1, 0, max_subdivisions);
+            this.subdivide_triangle(1, 2, 3, max_subdivisions);
+            this.subdivide_triangle(3, 0, 1, max_subdivisions);
+            this.subdivide_triangle(3, 2, 0, max_subdivisions);
 
             // With positions calculated, fill in normals and texture_coords of the finished Sphere:
             for (let p of this.arrays.position) {                                    // Each point has a normal vector that simply goes to the point from the origin:

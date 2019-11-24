@@ -106,9 +106,11 @@ class Main_Scene extends Simulation {
             specularity: 0,
             diffusivity: 1,
             texture: this.textures.earth,
-        })
+        });
 
-        this.scale_factor = vec3(1, 1, 1);
+        this.scale_factor = vec3(.01, .01, .01);
+
+        this.bottom_body = 9;
 
         this.bodies = [
             new Body(
@@ -117,7 +119,7 @@ class Main_Scene extends Simulation {
                 [this.rocket_material, this.rocket_material],
                 this.scale_factor,
                 [vec3(-4, 0, -4), vec3(-4, 0, 4), vec3(4, 0, 4), vec3(4, 0, -4), vec3(-4, 18, -4), vec3(-4, 18, 4), vec3(4, 18, 4), vec3(4, 18, -4)]
-            ).emplace(Mat4.translation(0, 75, 0), vec3(0, 0, 0), 0),
+            ).emplace(Mat4.translation(0, 75, 0), vec3(0, 0, 0), 0, false),
             new Body(
                 [this.shapes["stage-4-body"], this.shapes["stage-4-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0)],
@@ -181,12 +183,35 @@ class Main_Scene extends Simulation {
                 this.scale_factor,
                 [vec3(-1.5, -1, -1.5), vec3(-1.5, -1, 1.5), vec3(1.5, -1, 1.5), vec3(1.5, -1, -1.5), vec3(-1.5, 24, -1.5), vec3(-1.5, 24, 1.5), vec3(1.5, 24, 1.5), vec3(1.5, 24, -1.5)]
             ).emplace(Mat4.translation(-4.5 / 2, 0, -Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(5 * Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
-        ];
+        ]
+        ;
         console.log(this.bodies)
+
     }
 
     make_control_panel() {                           // make_control_panel(): Create the buttons for using the viewer.
-        this.key_triggered_button("Detach", [" "], () => this.detach = true);
+        this.key_triggered_button("Action", ["b"], () => this.action());
+    }
+
+    action() {
+        if (!this.bodies[this.bottom_body].activated) {
+            let i = this.bottom_body;
+            do {
+                this.bodies[i].activated = true;
+                i--;
+            } while (i > 3);
+        } else {
+            do {
+                this.bodies[this.bottom_body].attached = false;
+                this.bodies[this.bottom_body].activated = false;
+                this.bottom_body--;
+                if (this.bottom_body < 0)
+                    alert("End of Simulation");
+            } while (this.bottom_body > 3)
+        }
+        console.log(this.bodies);
+        console.log(this.bottom_body);
+
     }
 
     update_state(dt) {
@@ -195,7 +220,43 @@ class Main_Scene extends Simulation {
         //only called once per frame, handle all bodies here
         //handle collisions either at the beginning or end of this (trial and error)
 
+        //TODO: update this to handle checking boosters, collisions, accelerations, and stuff
+        for (let [i, b] of this.bodies.entries()) {
+            if (i === 0) {
+                if (this.bodies[this.bottom_body].activated) {
+                    b.linear_acceleration = b.linear_acceleration.plus(vec3(0, 9 * this.scale_factor[1], 0).times(dt));
+                    b.linear_velocity = b.linear_velocity.plus(b.linear_acceleration.times(dt));
+                    //console.log("hit")
+                } else {
+                    if (this.bodies[this.bottom_body].center[1] <= 0) {
+                        b.linear_velocity = vec3(0, 0, 0);
+                    } else {
+                        b.linear_acceleration = vec3(0, -9.8 * this.scale_factor[1], 0);
+                        b.linear_velocity = b.linear_velocity.plus(b.linear_acceleration.times(dt));
+                        b.angular_acceleration = 0;
+                        b.angular_velocity += b.angular_acceleration * dt;
+                    }
+                }
+            } else if (b.attached) {
+                b.linear_acceleration = this.bodies[0].linear_acceleration;
+                b.linear_velocity = this.bodies[0].linear_velocity;
+                b.angular_velocity = this.bodies[0].angular_velocity;
+                b.angular_acceleration = this.bodies[0].angular_velocity;
+                b.spin_axis = this.bodies[0].spin_axis;
+            } else {
+                if (b.center[1] <= 0) {
+                    b.linear_velocity = vec3(0, 0, 0);
+                } else {
+                    b.linear_acceleration = vec3(0, -9.8 * this.scale_factor[1], 0);
+                    b.linear_velocity = b.linear_velocity.plus(b.linear_acceleration.times(dt));
+                    b.angular_acceleration = 0;
+                    b.angular_velocity += b.angular_acceleration * dt;
+                }
 
+                //console.log("hit2")
+
+            }
+        }
     }
 
 
@@ -208,14 +269,17 @@ class Main_Scene extends Simulation {
         if (!context.scratchpad.controls) {
             this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
 
-            // Locate the camera here (inverted matrix).
-            //view origin
-            //program_state.set_camera(Mat4.translation(-30, -30, -100));
+            // Locate the camera here (inverted matrix) (keeping this in here doesn't allow the camera to follow objects).
+            //uncomment this to view origin (after commenting below)
+            //program_state.set_camera(Mat4.inverse(this.bodies[0].drawn_location.times(Mat4.translation(0, -10, 100))));
 
             //view earth
-            program_state.set_camera(Mat4.translation(0, 1000, -50000));
+            //program_state.set_camera(Mat4.translation(0, 1000, -50000));
         }
-        program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, 1, 100000);
+        //comment the line below if you want a moveable camera that doesn't follow objects
+        program_state.set_camera(Mat4.inverse(Mat4.translation(this.bodies[0].center[0] * this.scale_factor[0], this.bodies[0].center[1] * this.scale_factor[1] - .1, this.bodies[0].center[2] * this.scale_factor[2] + 2)));
+
+        program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, 1, 20000000);
         const t = program_state.animation_time, dt = program_state.animation_delta_time;
 
 
@@ -223,7 +287,7 @@ class Main_Scene extends Simulation {
         let model_transform = Mat4.identity();
         this.shapes["cloud-1"].draw(context, program_state, Mat4.translation(50, 5000, 0).times(Mat4.scale(10, 10, 10)), this.cloud);
         //this.shapes["sphere"].draw(context, program_state, Mat4.translation(0, -63100, 0).times(Mat4.scale(63100, 63100, 63100)), this.cloud);
-        this.shapes["sphere"].draw(context, program_state, Mat4.translation(0, -63100, 0).times(Mat4.scale(63100, 63100, 63100)), this.earth_material);
+        this.shapes["sphere"].draw(context, program_state, Mat4.translation(0, -63099, 0).times(Mat4.scale(63100, 63100, 63100)).times(Mat4.rotation(Math.PI / 2, 1, .5, 1)), this.earth_material);
     }
 }
 
