@@ -54,6 +54,10 @@ class Main_Scene extends Simulation {
         this.textures = {
             metal: new Texture("assets/textures/metal.jpg"),
             earth: new Texture("assets/textures/earth.png", "LINEAR_MIPMAP_LINEAR"),
+
+            // TODO: TEXTURES
+            space: new Texture("assets/textures/space.png", "LINEAR_MIPMAP_LINEAR"),
+            sun: new Texture("assets/textures/sun1.png")
         };
 
         this.shapes = {
@@ -70,6 +74,10 @@ class Main_Scene extends Simulation {
             "stage-4-engine": new defs.Shape_From_File("assets/objects/stage-2-engine.obj"),
             "payload-fairing-half": new defs.Shape_From_File("assets/objects/payload-fairing-half.obj"),
             "cloud-1": new defs.Shape_From_File("assets/objects/cloud1.obj"),
+
+            // TODO: OBJECTS
+            "space": new defs.Subdivision_Sphere(8),
+            "sun": new defs.Square(),
 
         };
 
@@ -107,6 +115,18 @@ class Main_Scene extends Simulation {
             diffusivity: 1,
             texture: this.textures.earth,
         });
+
+        // TODO: MATERIALS
+        this.space_material = new Material(new defs.Textured_Phong(), {
+            color: color(0, 0, 0, 1),
+            ambient: 1,
+            texture: this.textures.space,
+        });
+        this.sun_material = new Material(new defs.Textured_Phong(), {
+            color: color(0, 0, 0, 1),
+            ambient: 1,
+            texture: this.textures.sun,
+        })
 
         this.scale_factor = vec3(.01, .01, .01);
 
@@ -265,7 +285,9 @@ class Main_Scene extends Simulation {
         super.display(context, program_state);
 
         //can move this stuff to the constructor if it doesn't change by t (but it probably will)
-        program_state.lights = [new Light(vec4(.7, -.3, 2, 0), color(1, 1, 1, 1), 10000)]; //TODO: definitely change this position to sun
+        //TODO: SUNLIGHT
+        program_state.lights = [new Light(vec4(100, 5000, 100, 0), color(1, 1, 1, 1), 100000)];
+
         if (!context.scratchpad.controls) {
             this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
 
@@ -289,6 +311,10 @@ class Main_Scene extends Simulation {
         this.shapes["cloud-1"].draw(context, program_state, Mat4.translation(50, 5000, 0).times(Mat4.scale(10, 10, 10)), this.cloud);
         //this.shapes["sphere"].draw(context, program_state, Mat4.translation(0, -63100, 0).times(Mat4.scale(63100, 63100, 63100)), this.cloud);
         this.shapes["sphere"].draw(context, program_state, Mat4.translation(0, -63098.84, 0).times(Mat4.scale(63100, 63100, 63100)).times(Mat4.rotation(Math.PI / 2, 1, .5, 1)), this.earth_material);
+
+        // TODO: DRAW SPACE AND SUN
+        //this.shapes["space"].draw(context, program_state, Mat4.scale(6, 6, 6,), this.space_material);
+        this.shapes["sun"].draw(context, program_state, Mat4.translation(100, 5000, 100).times(Mat4.scale( 1000, 1000, 1000)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0)), this.sun_material);
     }
 }
 
