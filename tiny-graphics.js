@@ -1167,7 +1167,7 @@ const Program_State = tiny.Program_State =
             // often and matrix inversion is too slow to recompute needlessly.
             // Note that setting a camera matrix traditionally means storing the inverted version,
             // so that's the one this function expects to receive; it automatically sets the other.
-            Object.assign(this, {camera_transform: Mat4.inverse(matrix), camera_inverse: matrix})
+            Object.assign(this, {camera_transform: matrix, camera_inverse: Mat4.inverse(matrix)})
         }
     }
 
@@ -1199,7 +1199,7 @@ const Webgl_Manager = tiny.Webgl_Manager =
             // Specify an interpolation method for blending "transparent" triangles over the existing pixels:
             gl.enable(gl.BLEND);
 
-            gl.enable(gl.CULL_FACE);
+            //gl.enable(gl.CULL_FACE);
             //gl.cullFace(gl.BACK);
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
             // Store a single red pixel, as a placeholder image to prevent a console warning:

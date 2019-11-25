@@ -1,6 +1,7 @@
 import {tiny, defs} from './common.js';
 import Body from './body.js';
 import Simulation from './simulation.js';
+import Camera_Controls from './camera-controls.js'
 // Pull these names into this module's scope for convenience:
 const {
     Vector, Vector3, vec, vec3, vec4, color, Matrix, Mat4, Light, Shape, Material, Shader, Texture, Scene,
@@ -70,8 +71,8 @@ class Main_Scene extends Simulation {
             "stage-2-engine": new defs.Shape_From_File("assets/objects/stage-2-engine.obj"),
             "stage-3-body": new defs.Shape_From_File("assets/objects/stage-3-body.obj"),
             "stage-3-engine": new defs.Shape_From_File("assets/objects/stage-3-engine.obj"),
-            "stage-4-body": new defs.Shape_From_File("assets/objects/stage-2-body.obj"),
-            "stage-4-engine": new defs.Shape_From_File("assets/objects/stage-2-engine.obj"),
+            "stage-4-body": new defs.Shape_From_File("assets/objects/stage-4-body.obj"),
+            "stage-4-engine": new defs.Shape_From_File("assets/objects/stage-4-engine.obj"),
             "payload-fairing-half": new defs.Shape_From_File("assets/objects/payload-fairing-half.obj"),
             "cloud-1": new defs.Shape_From_File("assets/objects/cloud1.obj"),
 
@@ -128,7 +129,7 @@ class Main_Scene extends Simulation {
             texture: this.textures.sun,
         })
 
-        this.scale_factor = vec3(.01, .01, .01);
+        this.scale_factor = vec3(1, 1, 1);
 
         this.bottom_body = 9;
 
@@ -138,74 +139,76 @@ class Main_Scene extends Simulation {
                 [Mat4.translation(0, 0, 0), Mat4.rotation(Math.PI, 0, 1, 0)],
                 [this.rocket_material, this.rocket_material],
                 this.scale_factor,
-                [vec3(-4, 0, -4), vec3(-4, 0, 4), vec3(4, 0, 4), vec3(4, 0, -4), vec3(-4, 18, -4), vec3(-4, 18, 4), vec3(4, 18, 4), vec3(4, 18, -4)]
-            ).emplace(Mat4.translation(0, 75, 0), vec3(0, 0, 0), 0, false),
+                [vec3(-4, 0, -4), vec3(4, 18, 4)]
+            ).emplace(Mat4.translation(0, 56, 0), vec3(0, 0, 0), 0, false),
             new Body(
                 [this.shapes["stage-4-body"], this.shapes["stage-4-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0)],
                 [this.rocket_material, this.metal_material],
                 this.scale_factor,
-                [vec3(-3, -2, -3), vec3(-3, -2, 3), vec3(3, -2, 3), vec3(3, -2, -3), vec3(-3, 25, -3), vec3(-3, 25, 3), vec3(3, 25, 3), vec3(3, 25, -3)] //TODO: verify this is correct
+                [vec3(-3, -1, -3), vec3(3, 6, 3)] //TODO: verify this is correct
             ).emplace(Mat4.translation(0, 50, 0), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["stage-3-body"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0), Mat4.translation(-2.5, 0, 0), Mat4.translation(-2.5, 0, +2.5), Mat4.translation(0, 0, +2.5)],
                 [this.rocket_material, this.metal_material, this.metal_material, this.metal_material, this.metal_material],
                 this.scale_factor,
-                [vec3(-3, -1, -3), vec3(-3, -1, 3), vec3(3, -1, 3), vec3(3, -1, -3), vec3(-3, 25, -3), vec3(-3, 25, 3), vec3(3, 25, 3), vec3(3, 25, -3)]
+                [vec3(-3, -1, -3), vec3(3, 25, 3)]
             ).emplace(Mat4.translation(0, 25, 0), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["stage-2-body"], this.shapes["stage-2-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0)],
                 [this.rocket_material, this.metal_material],
                 this.scale_factor,
-                [vec3(-3, -2, -3), vec3(-3, -2, 3), vec3(3, -2, 3), vec3(3, -2, -3), vec3(-3, 25, -3), vec3(-3, 25, 3), vec3(3, 25, 3), vec3(3, 25, -3)]
+                [vec3(-3, -2, -3), vec3(3, 25, 3)]
             ).emplace(Mat4.translation(0, 0, 0), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
                 [this.rocket_material, this.rocket_material, this.metal_material],
                 this.scale_factor,
-                [vec3(-1.5, -1, -1.5), vec3(-1.5, -1, 1.5), vec3(1.5, -1, 1.5), vec3(1.5, -1, -1.5), vec3(-1.5, 24, -1.5), vec3(-1.5, 24, 1.5), vec3(1.5, 24, 1.5), vec3(1.5, 24, -1.5)]
+                [vec3(-1.5, -1, -1.5), vec3(1.5, 24, 1.5)]
             ).emplace(Mat4.translation(-4.5, 0, 0), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
                 [this.rocket_material, this.rocket_material, this.metal_material],
                 this.scale_factor,
-                [vec3(-1.5, -1, -1.5), vec3(-1.5, -1, 1.5), vec3(1.5, -1, 1.5), vec3(1.5, -1, -1.5), vec3(-1.5, 24, -1.5), vec3(-1.5, 24, 1.5), vec3(1.5, 24, 1.5), vec3(1.5, 24, -1.5)]
+                [vec3(-1.5, -1, -1.5), vec3(1.5, 24, 1.5)]
             ).emplace(Mat4.translation(4.5, 0, 0).times(Mat4.rotation(Math.PI, 0, 1, 0)), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
                 [this.rocket_material, this.rocket_material, this.metal_material],
                 this.scale_factor,
-                [vec3(-1.5, -1, -1.5), vec3(-1.5, -1, 1.5), vec3(1.5, -1, 1.5), vec3(1.5, -1, -1.5), vec3(-1.5, 24, -1.5), vec3(-1.5, 24, 1.5), vec3(1.5, 24, 1.5), vec3(1.5, 24, -1.5)]
+                [vec3(-1.5, -1, -1.5), vec3(1.5, 24, 1.5)]
             ).emplace(Mat4.translation(4.5 / 2, 0, Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(2 * Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
                 [this.rocket_material, this.rocket_material, this.metal_material],
                 this.scale_factor,
-                [vec3(-1.5, -1, -1.5), vec3(-1.5, -1, 1.5), vec3(1.5, -1, 1.5), vec3(1.5, -1, -1.5), vec3(-1.5, 24, -1.5), vec3(-1.5, 24, 1.5), vec3(1.5, 24, 1.5), vec3(1.5, 24, -1.5)]
+                [vec3(-1.5, -1, -1.5), vec3(1.5, 24, 1.5)]
             ).emplace(Mat4.translation(-4.5 / 2, 0, Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
                 [this.rocket_material, this.rocket_material, this.metal_material],
                 this.scale_factor,
-                [vec3(-1.5, -1, -1.5), vec3(-1.5, -1, 1.5), vec3(1.5, -1, 1.5), vec3(1.5, -1, -1.5), vec3(-1.5, 24, -1.5), vec3(-1.5, 24, 1.5), vec3(1.5, 24, 1.5), vec3(1.5, 24, -1.5)]
+                [vec3(-1.5, -1, -1.5), vec3(1.5, 24, 1.5)]
             ).emplace(Mat4.translation(4.5 / 2, 0, -Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(4 * Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
                 [this.rocket_material, this.rocket_material, this.metal_material],
                 this.scale_factor,
-                [vec3(-1.5, -1, -1.5), vec3(-1.5, -1, 1.5), vec3(1.5, -1, 1.5), vec3(1.5, -1, -1.5), vec3(-1.5, 24, -1.5), vec3(-1.5, 24, 1.5), vec3(1.5, 24, 1.5), vec3(1.5, 24, -1.5)]
+                [vec3(-1.5, -1, -1.5), vec3(1.5, 24, 1.5)]
             ).emplace(Mat4.translation(-4.5 / 2, 0, -Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(5 * Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
-        ]
-        ;
-        console.log(this.bodies)
+        ];
+        console.log(this.bodies);
+
+        this.camera_offset = Mat4.translation(0, -10, 200);
+        this.rotation = Mat4.identity();
 
     }
 
@@ -235,24 +238,22 @@ class Main_Scene extends Simulation {
     }
 
     update_state(dt) {
-        //handle physics here: add -9.8 acceleration on everything unless it is at y=0, and handle acceleration for bodies based on rocket on/off
-        //we can do this either by force/mass (annoying) or by purely guessing accelerations (easy)
         //only called once per frame, handle all bodies here
-        //handle collisions either at the beginning or end of this (trial and error)
 
         //TODO: update this to handle checking boosters, collisions, accelerations, and stuff
         for (let [i, b] of this.bodies.entries()) {
             if (i === 0) {
                 if (this.bodies[this.bottom_body].activated) {
-                    b.linear_acceleration = b.linear_acceleration.plus(vec3(0, 9 * this.scale_factor[1], 0).times(dt));
+                    b.linear_acceleration = b.linear_acceleration.plus(vec3(0, .9 * this.scale_factor[1], 0).times(dt));
                     b.linear_velocity = b.linear_velocity.plus(b.linear_acceleration.times(dt));
                     //console.log("hit")
                 } else {
                     if (this.bodies[this.bottom_body].center[1] <= 0) {
+                        b.linear_acceleration = vec3(0, 0, 0);
                         b.linear_velocity = vec3(0, 0, 0);
                     } else {
-                        b.linear_acceleration = vec3(0, -9.8 * this.scale_factor[1], 0);
-                        b.linear_velocity = b.linear_velocity.plus(b.linear_acceleration.times(dt));
+                        b.linear_acceleration = vec3(0, 0, 0);
+                        b.linear_velocity = b.linear_velocity.plus(vec3(0, -9.8 * this.scale_factor[0], 0).times(dt));
                         b.angular_acceleration = 0;
                         b.angular_velocity += b.angular_acceleration * dt;
                     }
@@ -265,16 +266,30 @@ class Main_Scene extends Simulation {
                 b.spin_axis = this.bodies[0].spin_axis;
             } else {
                 if (b.center[1] <= 0) {
+                    b.linear_acceleration = vec3(0, 0, 0);
                     b.linear_velocity = vec3(0, 0, 0);
                 } else {
-                    b.linear_acceleration = vec3(0, -9.8 * this.scale_factor[1], 0);
-                    b.linear_velocity = b.linear_velocity.plus(b.linear_acceleration.times(dt));
+                    b.linear_acceleration = vec3(0, 0, 0);
+                    b.linear_velocity = b.linear_velocity.plus(vec3(0, -9.8 * this.scale_factor[0], 0).times(dt));
                     b.angular_acceleration = 0;
                     b.angular_velocity += b.angular_acceleration * dt;
                 }
 
                 //console.log("hit2")
 
+            }
+        }
+    }
+
+    check_collisions() {
+        for (let i = 1; i < this.bodies.length; i++) {
+            let b = this.bodies[i];
+            for (let j = i + 1; j < this.bodies.length; j++) {
+                //only check collisions if at least one body is not attached
+                if ((!b.attached || !this.bodies[j].attached) && b.check_collision(this.bodies[j].hitbox, this.bodies[j].center)) {
+                    //console.log("boom");
+
+                }
             }
         }
     }
@@ -286,10 +301,10 @@ class Main_Scene extends Simulation {
 
         //can move this stuff to the constructor if it doesn't change by t (but it probably will)
         //TODO: SUNLIGHT
-        program_state.lights = [new Light(vec4(100, 5000, 100, 0), color(1, 1, 1, 1), 100000)];
+        program_state.lights = [new Light(vec4(100, 50, 100, 0), color(1, 1, 1, 1), 100000)];
 
         if (!context.scratchpad.controls) {
-            this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
+            this.children.push(context.scratchpad.controls = new Camera_Controls(() => program_state.camera_transform, () => program_state.camera_inverse, () => this.rotation));
 
             // Locate the camera here (inverted matrix) (keeping this in here doesn't allow the camera to follow objects).
             //uncomment this to view origin (after commenting below)
@@ -297,24 +312,24 @@ class Main_Scene extends Simulation {
 
             //view earth
             //program_state.set_camera(Mat4.translation(0, 1000, -50000));
-            program_state.set_camera(Mat4.inverse(Mat4.translation(this.bodies[0].center[0] * this.scale_factor[0], this.bodies[0].center[1] * this.scale_factor[1] - .1, this.bodies[0].center[2] * this.scale_factor[2] + 2)));
 
+            program_state.projection_transform = Mat4.perspective(Math.PI / 6, context.width / context.height, .1, 20000000);
         }
-        //comment the line below if you want a moveable camera that doesn't follow objects
-
-        program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, .1, 20000000);
+        let camera = Mat4.scale(this.scale_factor[0], this.scale_factor[1], this.scale_factor[2])
+            .times(Mat4.translation(this.bodies[0].center[0], this.bodies[0].center[1], this.bodies[0].center[2])).times(this.rotation).times(this.camera_offset);
+        program_state.set_camera(camera);
         const t = program_state.animation_time, dt = program_state.animation_delta_time;
 
 
         //draw non physically animated shapes here
         let model_transform = Mat4.identity();
-        this.shapes["cloud-1"].draw(context, program_state, Mat4.translation(50, 5000, 0).times(Mat4.scale(10, 10, 10)), this.cloud);
+        this.shapes["cloud-1"].draw(context, program_state, Mat4.translation(100, 10000, 0), this.cloud);
         //this.shapes["sphere"].draw(context, program_state, Mat4.translation(0, -63100, 0).times(Mat4.scale(63100, 63100, 63100)), this.cloud);
-        this.shapes["sphere"].draw(context, program_state, Mat4.translation(0, -63098.84, 0).times(Mat4.scale(63100, 63100, 63100)).times(Mat4.rotation(Math.PI / 2, 1, .5, 1)), this.earth_material);
+        this.shapes["sphere"].draw(context, program_state, Mat4.translation(0, -63101, 0).times(Mat4.scale(63100, 63100, 63100)).times(Mat4.rotation(Math.PI / 2, 1, .5, 1)), this.earth_material);
 
         // TODO: DRAW SPACE AND SUN
         //this.shapes["space"].draw(context, program_state, Mat4.scale(6, 6, 6,), this.space_material);
-        this.shapes["sun"].draw(context, program_state, Mat4.translation(100, 5000, 100).times(Mat4.scale( 1000, 1000, 1000)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0)), this.sun_material);
+        this.shapes["sun"].draw(context, program_state, Mat4.translation(100, 5000, 100).times(Mat4.scale(1000, 1000, 1000)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0)), this.sun_material);
     }
 }
 

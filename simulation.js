@@ -28,6 +28,8 @@ class Simulation extends Scene {                                         // **Si
             this.update_state(this.dt);
             for (let b of this.bodies)
                 b.advance(this.dt);
+
+            this.check_collisions();
             // Following the advice of the article, de-couple
             // our simulation time from our frame rate:
             this.t += Math.sign(frame_time) * this.dt;
@@ -71,6 +73,10 @@ class Simulation extends Scene {                                         // **Si
 
     update_state(dt)      // update_state(): Your subclass of Simulation has to override this abstract function.
     {
+        throw "Override this"
+    }
+
+    check_collisions() {
         throw "Override this"
     }
 }

@@ -31,6 +31,20 @@ class Body {                                   // **Body** can store and update 
         })
     }
 
+    check_collision(b_hitbox, b_center) //each has a (x,y,z)
+    {
+        let adj_hitbox_a = [this.hitbox[0].plus(this.center), this.hitbox[1].plus(this.center)];
+        let adj_hitbox_b = [b_hitbox[0].plus(b_center), b_hitbox[1].plus(b_center)];
+
+        if (adj_hitbox_b === adj_hitbox_a)
+            return 0;
+        else if ((adj_hitbox_a[0][0] <= adj_hitbox_b[1][0] && adj_hitbox_a[1][0] >= adj_hitbox_b[0][0]) &&
+            (adj_hitbox_a[0][1] <= adj_hitbox_b[1][1] && adj_hitbox_a[1][1] >= adj_hitbox_b[0][1]) &&
+            (adj_hitbox_a[0][2] <= adj_hitbox_b[1][2] && adj_hitbox_a[1][2] >= adj_hitbox_b[0][2]))
+            return 1;
+        return 0;
+    }
+
     advance(time_amount) {                           // advance(): Perform an integration (the simplistic Forward Euler method) to
         // advance all the linear and angular velocities one time-step forward.
         this.previous = {center: this.center.copy(), rotation: this.rotation.copy()};
