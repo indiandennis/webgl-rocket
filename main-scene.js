@@ -216,8 +216,10 @@ class Main_Scene extends Simulation {
         ];
         console.log(this.bodies);
 
+        //camera
+        //this.camera_zoom = Math.PI / 5;
         this.camera_offset = Mat4.translation(0, -10, 200);
-        this.rotation = Mat4.identity();
+        this.movement_transform = Mat4.identity();
 
     }
 
@@ -315,7 +317,7 @@ class Main_Scene extends Simulation {
         program_state.lights = [new Light(vec4(100, 50, 100, 0), color(1, 1, 1, 1), 100000)];
 
         if (!context.scratchpad.controls) {
-            this.children.push(context.scratchpad.controls = new Camera_Controls(() => program_state.camera_transform, () => program_state.camera_inverse, () => this.rotation));
+            this.children.push(context.scratchpad.controls = new Camera_Controls(() => program_state.camera_transform, (mat) => this.movement_transform = mat));
 
             // Locate the camera here (inverted matrix) (keeping this in here doesn't allow the camera to follow objects).
             //uncomment this to view origin (after commenting below)
@@ -327,7 +329,7 @@ class Main_Scene extends Simulation {
             program_state.projection_transform = Mat4.perspective(Math.PI / 6, context.width / context.height, 10, 6000000);
         }
         let camera = Mat4.scale(this.scale_factor[0], this.scale_factor[1], this.scale_factor[2])
-            .times(Mat4.translation(this.bodies[0].center[0], this.bodies[0].center[1], this.bodies[0].center[2])).times(this.rotation).times(this.camera_offset);
+            .times(Mat4.translation(this.bodies[0].center[0], this.bodies[0].center[1], this.bodies[0].center[2])).times(this.movement_transform).times(this.camera_offset);
         program_state.set_camera(camera);
         const t = program_state.animation_time, dt = program_state.animation_delta_time;
 
