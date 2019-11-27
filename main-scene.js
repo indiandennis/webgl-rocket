@@ -55,10 +55,11 @@ class Main_Scene extends Simulation {
         this.textures = {
             metal: new Texture("assets/textures/metal.jpg"),
             earth: new Texture("assets/textures/earth.png", "LINEAR_MIPMAP_LINEAR"),
+            body: new Texture("assets/textures/stage-2-body.png"),
 
             // TODO: TEXTURES
             space: new Texture("assets/textures/space.png", "LINEAR_MIPMAP_LINEAR"),
-            sun: new Texture("assets/textures/sun1.png")
+            sun: new Texture("assets/textures/sun-from-earth.png")
         };
 
         this.shapes = {
@@ -81,6 +82,14 @@ class Main_Scene extends Simulation {
             "sun": new defs.Square(),
 
         };
+
+        this.body_material = new Material(new defs.Textured_Phong(), {
+            color: color(0, 0, 0, 1),
+            ambient: .4,
+            specularity: .2,
+            diffusivity: .4,
+            texture: this.textures.body
+        });
 
         this.widget_options = {
             show_explanation: false,
@@ -151,7 +160,7 @@ class Main_Scene extends Simulation {
             new Body(
                 [this.shapes["stage-3-body"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0), Mat4.translation(-2.5, 0, 0), Mat4.translation(-2.5, 0, +2.5), Mat4.translation(0, 0, +2.5)],
-                [this.rocket_material, this.metal_material, this.metal_material, this.metal_material, this.metal_material],
+                [this.body_material, this.metal_material, this.metal_material, this.metal_material, this.metal_material],
                 this.scale_factor,
                 [vec3(-3, -1, -3), vec3(3, 25, 3)]
             ).emplace(Mat4.translation(0, 25, 0), vec3(0, 0, 0), 0),
@@ -244,7 +253,8 @@ class Main_Scene extends Simulation {
         for (let [i, b] of this.bodies.entries()) {
             if (i === 0) {
                 if (this.bodies[this.bottom_body].activated) {
-                    b.linear_acceleration = b.linear_acceleration.plus(vec3(0, .9 * this.scale_factor[1], 0).times(dt));
+                    if (b.linear_acceleration[1] < 3 * 9.8 * this.scale_factor[1])
+                        b.linear_acceleration = b.linear_acceleration.plus(vec3(0, .09 * this.scale_factor[1], 0).times(dt));
                     b.linear_velocity = b.linear_velocity.plus(b.linear_acceleration.times(dt));
                     //console.log("hit")
                 } else {
@@ -299,6 +309,7 @@ class Main_Scene extends Simulation {
         //display bodies
         super.display(context, program_state);
 
+
         //can move this stuff to the constructor if it doesn't change by t (but it probably will)
         //TODO: SUNLIGHT
         program_state.lights = [new Light(vec4(100, 50, 100, 0), color(1, 1, 1, 1), 100000)];
@@ -313,7 +324,7 @@ class Main_Scene extends Simulation {
             //view earth
             //program_state.set_camera(Mat4.translation(0, 1000, -50000));
 
-            program_state.projection_transform = Mat4.perspective(Math.PI / 6, context.width / context.height, .1, 20000000);
+            program_state.projection_transform = Mat4.perspective(Math.PI / 6, context.width / context.height, 10, 6000000);
         }
         let camera = Mat4.scale(this.scale_factor[0], this.scale_factor[1], this.scale_factor[2])
             .times(Mat4.translation(this.bodies[0].center[0], this.bodies[0].center[1], this.bodies[0].center[2])).times(this.rotation).times(this.camera_offset);
@@ -325,11 +336,11 @@ class Main_Scene extends Simulation {
         let model_transform = Mat4.identity();
         this.shapes["cloud-1"].draw(context, program_state, Mat4.translation(100, 10000, 0), this.cloud);
         //this.shapes["sphere"].draw(context, program_state, Mat4.translation(0, -63100, 0).times(Mat4.scale(63100, 63100, 63100)), this.cloud);
-        this.shapes["sphere"].draw(context, program_state, Mat4.translation(0, -63101, 0).times(Mat4.scale(63100, 63100, 63100)).times(Mat4.rotation(Math.PI / 2, 1, .5, 1)), this.earth_material);
+        this.shapes["sphere"].draw(context, program_state, Mat4.translation(0, -6309884, 0).times(Mat4.scale(6310000, 6310000, 6310000)).times(Mat4.rotation(Math.PI / 2, 1, .5, 1)), this.earth_material);
 
         // TODO: DRAW SPACE AND SUN
         //this.shapes["space"].draw(context, program_state, Mat4.scale(6, 6, 6,), this.space_material);
-        this.shapes["sun"].draw(context, program_state, Mat4.translation(100, 5000, 100).times(Mat4.scale(1000, 1000, 1000)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0)), this.sun_material);
+        this.shapes["sun"].draw(context, program_state, Mat4.translation(100, 500000, 100).times(Mat4.scale(50000, 50000, 50000)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0)), this.sun_material);
     }
 }
 

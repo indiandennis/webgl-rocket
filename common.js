@@ -680,6 +680,55 @@ const Textured_Phong = defs.Textured_Phong =
     class Textured_Phong extends Phong_Shader {                       // **Textured_Phong** is a Phong Shader extended to addditionally decal a
         // texture image over the drawn shape, lined up according to the texture
         // coordinates that are stored at each shape vertex.
+        shared_glsl_code()           // ********* SHARED CODE, INCLUDED IN BOTH SHADERS *********
+        {
+            return ` precision mediump float;
+        const int N_LIGHTS = ` + this.num_lights + `;
+        uniform float ambient, diffusivity, specularity, smoothness;
+        uniform vec4 light_positions_or_vectors[N_LIGHTS], light_colors[N_LIGHTS];
+        uniform float light_attenuation_factors[N_LIGHTS];
+        uniform vec4 shape_color;
+        uniform vec3 squared_scale, camera_center;
+
+                              // Specifier "varying" means a variable's final value will be passed from the vertex shader
+                              // on to the next phase (fragment shader), then interpolated per-fragment, weighted by the
+                              // pixel fragment's proximity to each of the 3 vertices (barycentric interpolation).
+        varying vec3 N, vertex_worldspace;
+                                             // ***** PHONG SHADING HAPPENS HERE: *****                                       
+        vec3 phong_model_lights( vec3 N, vec3 vertex_worldspace, vec3 diffuse_color)
+          {                                        // phong_model_lights():  Add up the lights' contributions.
+            vec3 E = normalize( camera_center - vertex_worldspace );
+            vec3 result = vec3( 0.0 );
+            for(int i = 0; i < N_LIGHTS; i++)
+              {
+                            // Lights store homogeneous coords - either a position or vector.  If w is 0, the 
+                            // light will appear directional (uniform direction from all points), and we 
+                            // simply obtain a vector towards the light by directly using the stored value.
+                            // Otherwise if w is 1 it will appear as a point light -- compute the vector to 
+                            // the point light's location from the current surface point.  In either case, 
+                            // fade (attenuate) the light as the vector needed to reach it gets longer.  
+                vec3 surface_to_light_vector = light_positions_or_vectors[i].xyz - 
+                                               light_positions_or_vectors[i].w * vertex_worldspace;                                             
+                float distance_to_light = length( surface_to_light_vector );
+
+                vec3 L = normalize( surface_to_light_vector );
+                vec3 H = normalize( L + E );
+                                                  // Compute the diffuse and specular components from the Phong
+                                                  // Reflection Model, using Blinn's "halfway vector" method:
+                float diffuse  =      max( dot( N, L ), 0.0 );
+                float specular = pow( max( dot( N, H ), 0.0 ), smoothness );
+                float attenuation = 1.0 / (1.0 + light_attenuation_factors[i] * distance_to_light * distance_to_light );
+                
+                
+                vec3 light_contribution = diffuse_color.xyz * light_colors[i].xyz * diffusivity * diffuse
+                                                          + light_colors[i].xyz * specularity * specular;
+
+                result += attenuation * light_contribution;
+              }
+            return result;
+          } `;
+        }
+
         vertex_glsl_code()           // ********* VERTEX SHADER *********
         {
             return this.shared_glsl_code() + `
@@ -716,7 +765,7 @@ const Textured_Phong = defs.Textured_Phong =
                                                                      // Compute an initial (ambient) color:
             gl_FragColor = vec4( ( tex_color.xyz + shape_color.xyz ) * ambient, shape_color.w * tex_color.w ); 
                                                                      // Compute the final color with contributions from lights:
-            gl_FragColor.xyz += phong_model_lights( normalize( N ), vertex_worldspace );
+            gl_FragColor.xyz += phong_model_lights( normalize( N ), vertex_worldspace, tex_color.xyz + shape_color.xyz );
           } `;
         }
 
@@ -968,6 +1017,7 @@ const Shape_From_File = defs.Shape_From_File =
             this.load_file(filename, normalize);
         }
 
+
         load_file(filename, normalize) {                             // Request the external file and wait for it to load.
             // Failure mode:  Loads an empty shape.
             return fetch(filename)
@@ -982,7 +1032,7 @@ const Shape_From_File = defs.Shape_From_File =
         }
 
         parse_into_mesh(data, normalize) {                           // Adapted from the "webgl-obj-loader.js" library found online:
-            var verts = [], vertNormals = [], textures = [], unpacked = {};
+            let verts = [], vertNormals = [], textures = [], unpacked = {};
 
             unpacked.verts = [];
             unpacked.norms = [];
@@ -991,58 +1041,73 @@ const Shape_From_File = defs.Shape_From_File =
             unpacked.indices = [];
             unpacked.index = 0;
 
-            var lines = data.split('\n');
+            const VERTEX_RE = /^v\s/;
+            const NORMAL_RE = /^vn\s/;
+            const TEXTURE_RE = /^vt\s/;
+            const FACE_RE = /^f\s/;
+            const WHITESPACE_RE = /\s+/;
 
-            var VERTEX_RE = /^v\s/;
-            var NORMAL_RE = /^vn\s/;
-            var TEXTURE_RE = /^vt\s/;
-            var FACE_RE = /^f\s/;
-            var WHITESPACE_RE = /\s+/;
+            const lines = data.split('\n');
 
-            for (var i = 0; i < lines.length; i++) {
-                var line = lines[i].trim();
-                var elements = line.split(WHITESPACE_RE);
+            for (let line of lines) {
+                line = line.trim();
+                if (!line || line.startsWith("#")) {
+                    continue;
+                }
+                const elements = line.split(WHITESPACE_RE);
                 elements.shift();
 
-                if (VERTEX_RE.test(line)) verts.push.apply(verts, elements);
-                else if (NORMAL_RE.test(line)) vertNormals.push.apply(vertNormals, elements);
-                else if (TEXTURE_RE.test(line)) textures.push.apply(textures, elements);
-                else if (FACE_RE.test(line)) {
-                    var quad = false;
-                    for (var j = 0, eleLen = elements.length; j < eleLen; j++) {
-                        if (j === 3 && !quad) {
-                            j = 2;
-                            quad = true;
-                        }
-                        if (elements[j] in unpacked.hashindices)
-                            unpacked.indices.push(unpacked.hashindices[elements[j]]);
-                        else {
-                            var vertex = elements[j].split('/');
+                if (VERTEX_RE.test(line)) {
+                    // if this is a vertex
+                    verts.push(...elements);
+                } else if (NORMAL_RE.test(line)) {
+                    // if this is a vertex normal
+                    vertNormals.push(...elements);
+                } else if (TEXTURE_RE.test(line)) {
+                    let coords = elements;
+                    // by default, the loader will only look at the U and V
+                    // coordinates of the vt declaration. So, this truncates the
+                    // elements to only those 2 values.
+                    if (elements.length > 2) {
+                        coords = elements.slice(0, 2);
+                    }
+                    textures.push(...coords);
+                } else if (FACE_RE.test(line)) {
+                    const triangles = triangulate(elements);
+                    for (const triangle of triangles) {
+                        for (let j = 0, eleLen = triangle.length; j < eleLen; j++) {
+                            if (elements[j] in unpacked.hashindices)
+                                unpacked.indices.push(unpacked.hashindices[elements[j]]);
+                            else {
+                                const vertex = triangle[j].split("/");
+                                const normalIndex = vertex.length - 1;
 
-                            unpacked.verts.push(+verts[(vertex[0] - 1) * 3 + 0]);
-                            unpacked.verts.push(+verts[(vertex[0] - 1) * 3 + 1]);
-                            unpacked.verts.push(+verts[(vertex[0] - 1) * 3 + 2]);
-
-                            if (textures.length) {
-                                unpacked.textures.push(+textures[((vertex[1] - 1) || vertex[0]) * 2 + 0]);
-                                unpacked.textures.push(+textures[((vertex[1] - 1) || vertex[0]) * 2 + 1]);
+                                // Vertex position
+                                unpacked.verts.push(+verts[(+vertex[0] - 1) * 3 + 0]);
+                                unpacked.verts.push(+verts[(+vertex[0] - 1) * 3 + 1]);
+                                unpacked.verts.push(+verts[(+vertex[0] - 1) * 3 + 2]);
+                                // Vertex textures
+                                if (textures.length) {
+                                    unpacked.textures.push(+textures[(+vertex[1] - 1) * 2 + 0]);
+                                    unpacked.textures.push(+textures[(+vertex[1] - 1) * 2 + 1]);
+                                }
+                                // Vertex normals
+                                unpacked.norms.push(+vertNormals[(+vertex[normalIndex] - 1) * 3 + 0]);
+                                unpacked.norms.push(+vertNormals[(+vertex[normalIndex] - 1) * 3 + 1]);
+                                unpacked.norms.push(+vertNormals[(+vertex[normalIndex] - 1) * 3 + 2]);
+                                // add the newly created Vertex to the list of indices
+                                unpacked.hashindices[elements[j]] = unpacked.index;
+                                unpacked.indices.push(unpacked.index);
+                                // increment the counter
+                                unpacked.index += 1;
                             }
-
-                            unpacked.norms.push(+vertNormals[((vertex[2] - 1) || vertex[0]) * 3 + 0]);
-                            unpacked.norms.push(+vertNormals[((vertex[2] - 1) || vertex[0]) * 3 + 1]);
-                            unpacked.norms.push(+vertNormals[((vertex[2] - 1) || vertex[0]) * 3 + 2]);
-
-                            unpacked.hashindices[elements[j]] = unpacked.index;
-                            unpacked.indices.push(unpacked.index);
-                            unpacked.index += 1;
                         }
-                        if (j === 3 && quad) unpacked.indices.push(unpacked.hashindices[elements[0]]);
                     }
                 }
             }
             {
                 const {verts, norms, textures} = unpacked;
-                for (var j = 0; j < verts.length / 3; j++) {
+                for (let j = 0; j < verts.length / 3; j++) {
                     this.arrays.position.push(vec3(verts[3 * j], verts[3 * j + 1], verts[3 * j + 2]));
                     this.arrays.normal.push(vec3(norms[3 * j], norms[3 * j + 1], norms[3 * j + 2]));
                     this.arrays.texture_coord.push(vec(textures[2 * j], textures[2 * j + 1]));
@@ -1059,4 +1124,18 @@ const Shape_From_File = defs.Shape_From_File =
             if (this.ready)
                 super.draw(context, program_state, model_transform, material);
         }
+    };
+
+function* triangulate(elements) {
+    if (elements.length <= 3) {
+        yield elements;
+    } else if (elements.length === 4) {
+        yield [elements[0], elements[1], elements[2]];
+        yield [elements[2], elements[3], elements[0]];
+    } else {
+        for (let i = 1; i < elements.length - 1; i++) {
+            yield [elements[0], elements[i], elements[i + 1]];
+        }
     }
+}
+

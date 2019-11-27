@@ -715,7 +715,8 @@ const Vertex_Buffer = tiny.Vertex_Buffer =
         // triangles, expressed as triples of vertex indices.
         constructor(...array_names) {                             // This superclass constructor expects a list of names of arrays that you plan for.
             super();
-            [this.arrays, this.indices] = [{}, []];
+            this.arrays = {};
+            this.indices = [];
             // Initialize a blank array member of the Shape with each of the names provided:
             for (let name of array_names) this.arrays[name] = [];
         }
@@ -1091,7 +1092,7 @@ const Shader = tiny.Shader =
 
         // You must define an update_GPU() function that includes the extra custom JavaScript code
         // needed to populate your particular shader program with all the data values it is expecting.
-    }
+    };
 
 
 const Texture = tiny.Texture =
@@ -1322,4 +1323,113 @@ const Scene = tiny.Scene =
         }                            // make_control_panel(): Called by Controls_Widget for generating interactive UI.
         show_explanation(document_section) {
         }                            // show_explanation(): Called by Text_Widget for generating documentation.
+    };
+
+const Particle_Shader = tiny.Particle_Shader =
+    class Particle_Shader extends Graphics_Card_Object {                           // **Shader** loads a GLSL shader program onto your graphics card, starting from a JavaScript string.
+        // To use it, make subclasses of Shader that define these strings of GLSL code.  The base class will
+        // command the GPU to recieve, compile, and run these programs.  In WebGL 1, the shader runs once per
+        // every shape that is drawn onscreen.
+
+        // Extend the class and fill in the abstract functions, some of which define GLSL strings, and others
+        // (update_GPU) which define the extra custom JavaScript code needed to populate your particular shader
+        // program with all the data values it is expecting, such as matrices.  The shader pulls these values
+        // from two places in your JavaScript:  A Material object, for values pertaining to the current shape
+        // only, and a Program_State object, for values pertaining to your entire Scene or program.
+        copy_onto_graphics_card(context) {                                     // copy_onto_graphics_card():  Called automatically as needed to load the
+            // shader program onto one of your GPU contexts for its first time.
+
+            // Define what this object should store in each new WebGL Context:
+            const initial_gpu_representation = {
+                program: undefined, gpu_addresses: undefined,
+                vertShdr: undefined, fragShdr: undefined
+            };
+            // Our object might need to register to multiple GPU contexts in the case of
+            // multiple drawing areas.  If this is a new GPU context for this object,
+            // copy the object to the GPU.  Otherwise, this object already has been
+            // copied over, so get a pointer to the existing instance.
+            const gpu_instance = super.copy_onto_graphics_card(context, initial_gpu_representation);
+
+            const gl = context;
+            const program = gpu_instance.program || context.createProgram();
+            const vertShdr = gpu_instance.vertShdr || gl.createShader(gl.VERTEX_SHADER);
+            const fragShdr = gpu_instance.fragShdr || gl.createShader(gl.FRAGMENT_SHADER);
+
+            if (gpu_instance.vertShdr) gl.detachShader(program, vertShdr);
+            if (gpu_instance.fragShdr) gl.detachShader(program, fragShdr);
+
+            gl.shaderSource(vertShdr, this.vertex_glsl_code());
+            gl.compileShader(vertShdr);
+            if (!gl.getShaderParameter(vertShdr, gl.COMPILE_STATUS))
+                throw "Vertex shader compile error: " + gl.getShaderInfoLog(vertShdr);
+
+            gl.shaderSource(fragShdr, this.fragment_glsl_code());
+            gl.compileShader(fragShdr);
+            if (!gl.getShaderParameter(fragShdr, gl.COMPILE_STATUS))
+                throw "Fragment shader compile error: " + gl.getShaderInfoLog(fragShdr);
+
+            gl.attachShader(program, vertShdr);
+            gl.attachShader(program, fragShdr);
+            gl.linkProgram(program);
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS))
+                throw "Shader linker error: " + gl.getProgramInfoLog(this.program);
+
+            Object.assign(gpu_instance, {
+                program,
+                vertShdr,
+                fragShdr,
+                gpu_addresses: new Graphics_Addresses(program, gl)
+            });
+            return gpu_instance;
+        }
+
+        activate(context, buffer_pointers, program_state, model_transform, material) {                                     // activate(): Selects this Shader in GPU memory so the next shape draws using it.
+            const gpu_instance = super.activate(context);
+
+            context.useProgram(gpu_instance.program);
+
+            // --- Send over all the values needed by this particular shader to the GPU: ---
+            this.update_GPU(context, gpu_instance.gpu_addresses, program_state, model_transform, material);
+
+            // --- Turn on all the correct attributes and make sure they're pointing to the correct ranges in GPU memory. ---
+            for (let [attr_name, attribute] of Object.entries(gpu_instance.gpu_addresses.shader_attributes)) {
+                if (!attribute.enabled) {
+                    if (attribute.index >= 0) context.disableVertexAttribArray(attribute.index);
+                    continue;
+                }
+                context.enableVertexAttribArray(attribute.index);
+                context.bindBuffer(context.ARRAY_BUFFER, buffer_pointers[attr_name]);    // Activate the correct buffer.
+                context.vertexAttribPointer(attribute.index, attribute.size, attribute.type,            // Populate each attribute
+                    attribute.normalized, attribute.stride, attribute.pointer);       // from the active buffer.
+            }
+        }                           // Your custom Shader has to override the following functions:
+        vertex_glsl_code() {
+        }
+
+        fragment_glsl_code() {
+        }
+
+        update_GPU() {
+        }
+
+        send_gpu_state(gl, gpu, gpu_state, model_transform) {                                       // send_gpu_state():  Send the state of our whole drawing context to the GPU.
+            const O = vec4(0, 0, 0, 1), camera_center = gpu_state.camera_transform.times(O).to3();
+            gl.uniform3fv(gpu.camera_center, camera_center);
+            // Use the squared scale trick from "Eric's blog" instead of inverse transpose matrix:
+            const squared_scale = model_transform.reduce(
+                (acc, r) => {
+                    return acc.plus(vec4(...r).times_pairwise(r))
+                }, vec4(0, 0, 0, 0)).to3();
+            gl.uniform3fv(gpu.squared_scale, squared_scale);
+            // Send the current matrices to the shader.  Go ahead and pre-compute
+            // the products we'll need of the of the three special matrices and just
+            // cache and send those.  They will be the same throughout this draw
+            // call, and thus across each instance of the vertex shader.
+            // Transpose them since the GPU expects matrices as column-major arrays.
+            const PCM = gpu_state.projection_transform.times(gpu_state.camera_inverse).times(model_transform);
+            gl.uniformMatrix4fv(gpu.model_transform, false, Matrix.flatten_2D_to_1D(model_transform.transposed()));
+            gl.uniformMatrix4fv(gpu.projection_camera_model_transform, false, Matrix.flatten_2D_to_1D(PCM.transposed()));
+
+        }
+
     }
