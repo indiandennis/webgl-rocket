@@ -85,9 +85,9 @@ class Main_Scene extends Simulation {
 
         this.body_material = new Material(new defs.Textured_Phong(), {
             color: color(0, 0, 0, 1),
-            ambient: .4,
+            ambient: .6,
             specularity: .2,
-            diffusivity: .4,
+            diffusivity: .3,
             texture: this.textures.body
         });
 
@@ -120,9 +120,9 @@ class Main_Scene extends Simulation {
 
         this.earth_material = new Material(new defs.Textured_Phong(), {
             color: color(.05, .05, .05, 1),
-            ambient: 1,
+            ambient: .9,
             specularity: 0,
-            diffusivity: 1,
+            diffusivity: .25,
             texture: this.textures.earth,
         });
 
@@ -218,7 +218,7 @@ class Main_Scene extends Simulation {
 
         //camera
         //this.camera_zoom = Math.PI / 5;
-        this.camera_offset = Mat4.translation(0, -10, 200);
+        this.camera_offset = Mat4.translation(0, 0, 200);
         this.movement_transform = Mat4.identity();
 
     }
@@ -232,6 +232,7 @@ class Main_Scene extends Simulation {
             let i = this.bottom_body;
             do {
                 this.bodies[i].activated = true;
+                this.bodies[0].linear_acceleration = vec3(0, .4, 0);
                 i--;
             } while (i > 3);
         } else {
@@ -255,8 +256,8 @@ class Main_Scene extends Simulation {
         for (let [i, b] of this.bodies.entries()) {
             if (i === 0) {
                 if (this.bodies[this.bottom_body].activated) {
-                    if (b.linear_acceleration[1] < 3 * 9.8 * this.scale_factor[1])
-                        b.linear_acceleration = b.linear_acceleration.plus(vec3(0, .09 * this.scale_factor[1], 0).times(dt));
+                    if (b.linear_acceleration[1] < 6 * 9.8 * this.scale_factor[1])
+                        b.linear_acceleration = b.linear_acceleration.plus(vec3(0, .1 * this.scale_factor[1], 0).times(dt / 1000));
                     b.linear_velocity = b.linear_velocity.plus(b.linear_acceleration.times(dt));
                     //console.log("hit")
                 } else {
@@ -265,7 +266,7 @@ class Main_Scene extends Simulation {
                         b.linear_velocity = vec3(0, 0, 0);
                     } else {
                         b.linear_acceleration = vec3(0, 0, 0);
-                        b.linear_velocity = b.linear_velocity.plus(vec3(0, -9.8 * this.scale_factor[0], 0).times(dt));
+                        b.linear_velocity = b.linear_velocity.plus(vec3(0, -9.8 * this.scale_factor[0], 0).times(dt / 1000));
                         b.angular_acceleration = 0;
                         b.angular_velocity += b.angular_acceleration * dt;
                     }
