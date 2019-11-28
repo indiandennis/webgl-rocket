@@ -78,7 +78,7 @@ class Main_Scene extends Simulation {
             "cloud-1": new defs.Shape_From_File("assets/objects/cloud1.obj"),
 
             // TODO: OBJECTS
-            "space": new defs.Subdivision_Sphere(4),
+            "space": new defs.Internal_Subdivision_Sphere(4),
             "sun": new defs.Square(),
 
         };
@@ -354,21 +354,19 @@ class Main_Scene extends Simulation {
         // If the rocket is below 15km, color is sky blue
         // If the rocket is above 600km, color is black
         // In between, adjust color according to height
-        if(this.bodies[0].center[1] < 15000.0) {
+        if (this.bodies[0].center[1] < 15000.0) {
             this.color_lerp = 0;
-        }
-        else if(this.bodies[0].center[1] > 500000.0) {
+        } else if (this.bodies[0].center[1] > 500000.0) {
             this.color_lerp = 1;
-        }
-        else {
+        } else {
             this.color_lerp = ((this.bodies[0].center[1] - 15000.0) / 485000.0);
         }
         // Linear interpolation equation
-        const sky_color = (sky_blue.times(1-this.color_lerp)).plus(space_black.times(this.color_lerp));
+        const sky_color = (sky_blue.times(1 - this.color_lerp)).plus(space_black.times(this.color_lerp));
 
         // Change color of space sphere
         this.space_material.color = color(sky_color[0], sky_color[1], sky_color[2], sky_color[3]);
-        this.shapes["space"].draw(context, program_state, Mat4.scale(7000000, 7000000, 7000000), this.space_material);
+        this.shapes["space"].draw(context, program_state, Mat4.translation(0, -6309884, 0).times(Mat4.scale(7000000, 7000000, 7000000)), this.space_material);
         this.shapes["sun"].draw(context, program_state, Mat4.translation(100, 500000, 100).times(Mat4.scale(50000, 50000, 50000)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0)), this.sun_material);
     }
 }

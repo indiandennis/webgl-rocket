@@ -772,7 +772,7 @@ const Vertex_Buffer = tiny.Vertex_Buffer =
             // Run the shaders to draw every triangle now:
             this.execute_shaders(webgl_manager.context, gpu_instance, type);
         }
-    }
+    };
 
 
 const Shape = tiny.Shape =
@@ -1326,7 +1326,7 @@ const Scene = tiny.Scene =
     };
 
 const Particle_Shader = tiny.Particle_Shader =
-    class Particle_Shader extends Graphics_Card_Object {                           // **Shader** loads a GLSL shader program onto your graphics card, starting from a JavaScript string.
+    class Particle_Shader extends Shader {                           // **Shader** loads a GLSL shader program onto your graphics card, starting from a JavaScript string.
         // To use it, make subclasses of Shader that define these strings of GLSL code.  The base class will
         // command the GPU to recieve, compile, and run these programs.  In WebGL 1, the shader runs once per
         // every shape that is drawn onscreen.
@@ -1336,77 +1336,96 @@ const Particle_Shader = tiny.Particle_Shader =
         // program with all the data values it is expecting, such as matrices.  The shader pulls these values
         // from two places in your JavaScript:  A Material object, for values pertaining to the current shape
         // only, and a Program_State object, for values pertaining to your entire Scene or program.
-        copy_onto_graphics_card(context) {                                     // copy_onto_graphics_card():  Called automatically as needed to load the
-            // shader program onto one of your GPU contexts for its first time.
 
-            // Define what this object should store in each new WebGL Context:
-            const initial_gpu_representation = {
-                program: undefined, gpu_addresses: undefined,
-                vertShdr: undefined, fragShdr: undefined
-            };
-            // Our object might need to register to multiple GPU contexts in the case of
-            // multiple drawing areas.  If this is a new GPU context for this object,
-            // copy the object to the GPU.  Otherwise, this object already has been
-            // copied over, so get a pointer to the existing instance.
-            const gpu_instance = super.copy_onto_graphics_card(context, initial_gpu_representation);
-
-            const gl = context;
-            const program = gpu_instance.program || context.createProgram();
-            const vertShdr = gpu_instance.vertShdr || gl.createShader(gl.VERTEX_SHADER);
-            const fragShdr = gpu_instance.fragShdr || gl.createShader(gl.FRAGMENT_SHADER);
-
-            if (gpu_instance.vertShdr) gl.detachShader(program, vertShdr);
-            if (gpu_instance.fragShdr) gl.detachShader(program, fragShdr);
-
-            gl.shaderSource(vertShdr, this.vertex_glsl_code());
-            gl.compileShader(vertShdr);
-            if (!gl.getShaderParameter(vertShdr, gl.COMPILE_STATUS))
-                throw "Vertex shader compile error: " + gl.getShaderInfoLog(vertShdr);
-
-            gl.shaderSource(fragShdr, this.fragment_glsl_code());
-            gl.compileShader(fragShdr);
-            if (!gl.getShaderParameter(fragShdr, gl.COMPILE_STATUS))
-                throw "Fragment shader compile error: " + gl.getShaderInfoLog(fragShdr);
-
-            gl.attachShader(program, vertShdr);
-            gl.attachShader(program, fragShdr);
-            gl.linkProgram(program);
-            if (!gl.getProgramParameter(program, gl.LINK_STATUS))
-                throw "Shader linker error: " + gl.getProgramInfoLog(this.program);
-
-            Object.assign(gpu_instance, {
-                program,
-                vertShdr,
-                fragShdr,
-                gpu_addresses: new Graphics_Addresses(program, gl)
-            });
-            return gpu_instance;
-        }
-
-        activate(context, buffer_pointers, program_state, model_transform, material) {                                     // activate(): Selects this Shader in GPU memory so the next shape draws using it.
-            const gpu_instance = super.activate(context);
-
-            context.useProgram(gpu_instance.program);
-
-            // --- Send over all the values needed by this particular shader to the GPU: ---
-            this.update_GPU(context, gpu_instance.gpu_addresses, program_state, model_transform, material);
-
-            // --- Turn on all the correct attributes and make sure they're pointing to the correct ranges in GPU memory. ---
-            for (let [attr_name, attribute] of Object.entries(gpu_instance.gpu_addresses.shader_attributes)) {
-                if (!attribute.enabled) {
-                    if (attribute.index >= 0) context.disableVertexAttribArray(attribute.index);
-                    continue;
-                }
-                context.enableVertexAttribArray(attribute.index);
-                context.bindBuffer(context.ARRAY_BUFFER, buffer_pointers[attr_name]);    // Activate the correct buffer.
-                context.vertexAttribPointer(attribute.index, attribute.size, attribute.type,            // Populate each attribute
-                    attribute.normalized, attribute.stride, attribute.pointer);       // from the active buffer.
-            }
-        }                           // Your custom Shader has to override the following functions:
+        // Your custom Shader has to override the following functions:
         vertex_glsl_code() {
+            return `
+                uniform float uTime;
+                
+                uniform vec3 uPos;
+                
+                attribute float aLifetime;
+                
+                attribute vec2 aTextureCoords;
+                
+                attribute vec2 aTriCorner;
+                
+                attribute vec3 aCenterOffset;
+                
+                attribute vec3 aVelocity;
+                
+                uniform mat4 uPMatrix;
+                uniform mat4 uViewMatrix;
+                                
+                varying float vLifetime;
+                varying vec2 vTextureCoords;
+                
+                void main (void) {
+                  float time = mod(uTime, aLifetime);
+                
+                  vec4 position = vec4(
+                    uPos + aCenterOffset + (time * aVelocity),
+                    1.0
+                  );
+                
+                  vLifetime = 1.3 - (time / aLifetime);
+                  vLifetime = clamp(vLifetime, 0.0, 1.0);
+                  float size = (vLifetime * vLifetime) * 0.05;
+                
+                  
+                  vec3 cameraRight = vec3(
+                    uViewMatrix[0].x, uViewMatrix[1].x, uViewMatrix[2].x
+                  );
+                  vec3 cameraUp = vec3(
+                    uViewMatrix[0].y, uViewMatrix[1].y, uViewMatrix[2].y
+                  );
+                
+                  position.xyz += (cameraRight * aTriCorner.x * size) +
+                     (cameraUp * aTriCorner.y * size);
+                 
+                
+                  gl_Position = uPMatrix * uViewMatrix * position;
+                
+                  vTextureCoords = aTextureCoords;
+                  vLifetime = aLifetime;
+                }
+            `
         }
 
         fragment_glsl_code() {
+            return `
+                precision mediump float;
+
+                uniform vec4 uColor;
+                
+                uniform float uTimeFrag;
+                
+                varying float vLifetime;
+                varying vec2 vTextureCoords;
+                
+                uniform sampler2D texAtlas;
+                
+                void main (void) {
+                  float time = mod(uTimeFrag, vLifetime);
+                  float percentOfLife = time / vLifetime;
+                  percentOfLife = clamp(percentOfLife, 0.0, 1.0);
+                
+                  //float offset = floor(16.0 * percentOfLife);
+                  //float offsetX = floor(mod(offset, 4.0)) / 4.0;
+                  //float offsetY = 0.75 - floor(offset / 4.0) / 4.0;
+                
+                  //vec4 texColor = texture2D(
+                  //  texAtlas, 
+                  //  vec2(
+                  //    (vTextureCoords.x / 4.0) + offsetX,
+                  //    (vTextureCoords.y / 4.0) + offsetY
+                  //));
+                  vec4 texColor = texture2D(texAtlas, vTextureCoords);
+                  gl_FragColor = uColor * texColor;
+                
+                  gl_FragColor.a *= vLifetime;
+                }
+            `
         }
 
         update_GPU() {
@@ -1432,4 +1451,4 @@ const Particle_Shader = tiny.Particle_Shader =
 
         }
 
-    }
+    };
