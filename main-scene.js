@@ -58,7 +58,7 @@ class Main_Scene extends Simulation {
             body: new Texture("assets/textures/stage-2-body.png"),
 
             // TODO: TEXTURES
-            space: new Texture("assets/textures/space.png", "LINEAR_MIPMAP_LINEAR"),
+            space: new Texture("assets/textures/gradient.png", "LINEAR_MIPMAP_LINEAR"),
             sun: new Texture("assets/textures/sun-from-earth.png")
         };
 
@@ -78,7 +78,7 @@ class Main_Scene extends Simulation {
             "cloud-1": new defs.Shape_From_File("assets/objects/cloud1.obj"),
 
             // TODO: OBJECTS
-            "space": new defs.Subdivision_Sphere(8),
+            "space": new defs.Subdivision_Sphere(4),
             "sun": new defs.Square(),
 
         };
@@ -128,8 +128,10 @@ class Main_Scene extends Simulation {
 
         // TODO: MATERIALS
         this.space_material = new Material(new defs.Textured_Phong(), {
-            color: color(0, 0, 0, 1),
+            color: color(0.443, 0.694, 0.91, 1),
             ambient: 1,
+            specularity: 0,
+            diffusivity: 0,
             texture: this.textures.space,
         });
         this.sun_material = new Material(new defs.Textured_Phong(), {
@@ -220,6 +222,9 @@ class Main_Scene extends Simulation {
         //this.camera_zoom = Math.PI / 5;
         this.camera_offset = Mat4.translation(0, 0, 200);
         this.movement_transform = Mat4.identity();
+
+        // TODO: LINEAR INTERPOLATION FOR SKY COLOR
+        this.color_lerp = 0;
 
     }
 
@@ -342,7 +347,28 @@ class Main_Scene extends Simulation {
         this.shapes["sphere"].draw(context, program_state, Mat4.translation(0, -6309884, 0).times(Mat4.scale(6310000, 6310000, 6310000)).times(Mat4.rotation(Math.PI / 2, 1, .5, 1)), this.earth_material);
 
         // TODO: DRAW SPACE AND SUN
-        //this.shapes["space"].draw(context, program_state, Mat4.scale(6, 6, 6,), this.space_material);
+        // Color endpoints of the linear interpolation
+        let sky_blue = vec4(0.443, 0.694, 0.91, 1);
+        let space_black = vec4(0, 0, 0, 1);
+
+        // If the rocket is below 15km, color is sky blue
+        // If the rocket is above 600km, color is black
+        // In between, adjust color according to height
+        if(this.bodies[0].center[1] < 15000.0) {
+            this.color_lerp = 0;
+        }
+        else if(this.bodies[0].center[1] > 500000.0) {
+            this.color_lerp = 1;
+        }
+        else {
+            this.color_lerp = ((this.bodies[0].center[1] - 15000.0) / 485000.0);
+        }
+        // Linear interpolation equation
+        const sky_color = (sky_blue.times(1-this.color_lerp)).plus(space_black.times(this.color_lerp));
+
+        // Change color of space sphere
+        this.space_material.color = color(sky_color[0], sky_color[1], sky_color[2], sky_color[3]);
+        this.shapes["space"].draw(context, program_state, Mat4.scale(7000000, 7000000, 7000000), this.space_material);
         this.shapes["sun"].draw(context, program_state, Mat4.translation(100, 500000, 100).times(Mat4.scale(50000, 50000, 50000)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0)), this.sun_material);
     }
 }
