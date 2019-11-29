@@ -33,7 +33,7 @@ const Triangle = defs.Triangle =
             // and texture coordinate together.  Lastly we told it how to connect vertex entries into triangles.
             // Every three indices in "this.indices" traces out one triangle.
         }
-    }
+    };
 
 
 const Square = defs.Square =
@@ -51,7 +51,7 @@ const Square = defs.Square =
             // Use two triangles this time, indexing into four distinct vertices:
             this.indices.push(0, 1, 2, 1, 3, 2);
         }
-    }
+    };
 
 
 const Tetrahedron = defs.Tetrahedron =
@@ -96,7 +96,7 @@ const Tetrahedron = defs.Tetrahedron =
                 this.indices.push(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
             }
         }
-    }
+    };
 
 const Windmill = defs.Windmill =
     class Windmill extends Shape {                             // **Windmill**  As our shapes get more complicated, we begin using matrices and flow
@@ -125,7 +125,7 @@ const Windmill = defs.Windmill =
                 this.indices.push(3 * i, 3 * i + 1, 3 * i + 2);
             }
         }
-    }
+    };
 
 
 const Cube = defs.Cube =
@@ -145,7 +145,7 @@ const Cube = defs.Cube =
                     Square.insert_transformed_copy_into(this, [], square_transform);
                 }
         }
-    }
+    };
 
 
 const Subdivision_Sphere = defs.Subdivision_Sphere =
@@ -221,7 +221,7 @@ const Subdivision_Sphere = defs.Subdivision_Sphere =
             this.subdivide_triangle(ac, bc, c, count - 1);
             this.subdivide_triangle(ab, bc, ac, count - 1);
         }
-    }
+    };
 
 
 const Grid_Patch = defs.Grid_Patch =
@@ -273,7 +273,7 @@ const Grid_Patch = defs.Grid_Patch =
             const frac = ratio * (array.length - 1), alpha = frac - Math.floor(frac);
             return array[Math.floor(frac)].mix(array[Math.ceil(frac)], alpha);
         }
-    }
+    };
 
 
 const Surface_Of_Revolution = defs.Surface_Of_Revolution =
@@ -288,7 +288,7 @@ const Surface_Of_Revolution = defs.Surface_Of_Revolution =
 
             super(rows, columns, row_operation, column_operation, texture_coord_range);
         }
-    }
+    };
 
 
 const Regular_2D_Polygon = defs.Regular_2D_Polygon =
@@ -299,7 +299,7 @@ const Regular_2D_Polygon = defs.Regular_2D_Polygon =
             this.arrays.normal = this.arrays.normal.map(x => vec3(0, 0, 1));
             this.arrays.texture_coord.forEach((x, i, a) => a[i] = this.arrays.position[i].map(x => x / 2 + .5).slice(0, 2));
         }
-    }
+    };
 
 const Cylindrical_Tube = defs.Cylindrical_Tube =
     class Cylindrical_Tube extends Surface_Of_Revolution    // An open tube shape with equally sized sections, pointing down Z locally.
@@ -307,7 +307,7 @@ const Cylindrical_Tube = defs.Cylindrical_Tube =
         constructor(rows, columns, texture_range) {
             super(rows, columns, Vector3.cast([1, 0, .5], [1, 0, -.5]), texture_range);
         }
-    }
+    };
 
 const Cone_Tip = defs.Cone_Tip =
     class Cone_Tip extends Surface_Of_Revolution    // Note:  Touches the Z axis; squares degenerate into triangles as they sweep around.
@@ -315,7 +315,7 @@ const Cone_Tip = defs.Cone_Tip =
         constructor(rows, columns, texture_range) {
             super(rows, columns, Vector3.cast([0, 0, 1], [1, 0, -1]), texture_range);
         }
-    }
+    };
 
 const Torus = defs.Torus =
     class Torus extends Shape                                         // Build a donut shape.  An example of a surface of revolution.
@@ -330,7 +330,7 @@ const Torus = defs.Torus =
 
             Surface_Of_Revolution.insert_transformed_copy_into(this, [rows, columns, circle_points, texture_range]);
         }
-    }
+    };
 
 const Grid_Sphere = defs.Grid_Sphere =
     class Grid_Sphere extends Shape                  // With lattitude / longitude divisions; this means singularities are at
@@ -343,7 +343,7 @@ const Grid_Sphere = defs.Grid_Sphere =
 
             Surface_Of_Revolution.insert_transformed_copy_into(this, [rows, columns, semi_circle_points, texture_range]);
         }
-    }
+    };
 
 const Closed_Cone = defs.Closed_Cone =
     class Closed_Cone extends Shape     // Combine a cone tip and a regular polygon to make a closed cone.
@@ -354,7 +354,7 @@ const Closed_Cone = defs.Closed_Cone =
             Regular_2D_Polygon.insert_transformed_copy_into(this, [1, columns], Mat4.rotation(Math.PI, 0, 1, 0)
                 .times(Mat4.translation(0, 0, 1)));
         }
-    }
+    };
 
 const Rounded_Closed_Cone = defs.Rounded_Closed_Cone =
     class Rounded_Closed_Cone extends Surface_Of_Revolution   // An alternative without two separate sections
@@ -362,7 +362,7 @@ const Rounded_Closed_Cone = defs.Rounded_Closed_Cone =
         constructor(rows, columns, texture_range) {
             super(rows, columns, [vec3(0, 0, 1), vec3(1, 0, -1), vec3(0, 0, -1)], texture_range);
         }
-    }
+    };
 
 const Capped_Cylinder = defs.Capped_Cylinder =
     class Capped_Cylinder extends Shape                // Combine a tube and two regular polygons to make a closed cylinder.
@@ -374,7 +374,7 @@ const Capped_Cylinder = defs.Capped_Cylinder =
             Regular_2D_Polygon.insert_transformed_copy_into(this, [1, columns], Mat4.translation(0, 0, .5));
             Regular_2D_Polygon.insert_transformed_copy_into(this, [1, columns], Mat4.rotation(Math.PI, 0, 1, 0).times(Mat4.translation(0, 0, .5)));
         }
-    }
+    };
 
 const Rounded_Capped_Cylinder = defs.Rounded_Capped_Cylinder =
     class Rounded_Capped_Cylinder extends Surface_Of_Revolution   // An alternative without three separate sections
@@ -382,7 +382,7 @@ const Rounded_Capped_Cylinder = defs.Rounded_Capped_Cylinder =
         constructor(rows, columns, texture_range) {
             super(rows, columns, [vec3(0, 0, .5), vec3(1, 0, .5), vec3(1, 0, -.5), vec3(0, 0, -.5)], texture_range)
         }
-    }
+    };
 
 
 const Axis_Arrows = defs.Axis_Arrows =
@@ -405,7 +405,7 @@ const Axis_Arrows = defs.Axis_Arrows =
             Cube.insert_transformed_copy_into(this, [], transform.times(Mat4.translation(0, .95, .5)).times(Mat4.scale(.05, .05, .4)));
             Cylindrical_Tube.insert_transformed_copy_into(this, [7, 7, tex], transform.times(Mat4.translation(0, 0, 1)).times(Mat4.scale(.1, .1, 2)));
         }
-    }
+    };
 
 
 const Minimal_Shape = defs.Minimal_Shape =
@@ -417,7 +417,7 @@ const Minimal_Shape = defs.Minimal_Shape =
             this.arrays.position = [vec3(0, 0, 0), vec3(1, 0, 0), vec3(0, 1, 0)];
             this.arrays.color = [color(1, 0, 0, 1), color(0, 1, 0, 1), color(0, 0, 1, 1)];
         }
-    }
+    };
 
 
 const Minimal_Webgl_Demo = defs.Minimal_Webgl_Demo =
@@ -434,7 +434,7 @@ const Minimal_Webgl_Demo = defs.Minimal_Webgl_Demo =
         display(context, graphics_state) {                                           // Every frame, simply draw the Triangle at its default location.
             this.shapes.triangle.draw(context, graphics_state, Mat4.identity(), new Material(this.shader));
         }
-    }
+    };
 
 
 const Basic_Shader = defs.Basic_Shader =
@@ -477,7 +477,7 @@ const Basic_Shader = defs.Basic_Shader =
           gl_FragColor = VERTEX_COLOR;
         }`;
         }
-    }
+    };
 
 
 const Funny_Shader = defs.Funny_Shader =
@@ -524,7 +524,7 @@ const Funny_Shader = defs.Funny_Shader =
             5.0 * u * sin(20.0 * u ) + 6.0 * v * sin(14.0 * v ) + 4.0 * sin(16.0 * a));
         }`;
         }
-    }
+    };
 
 
 const Phong_Shader = defs.Phong_Shader =
@@ -673,7 +673,7 @@ const Phong_Shader = defs.Phong_Shader =
             this.send_material(context, gpu_addresses, material);
             this.send_gpu_state(context, gpu_addresses, gpu_state, model_transform);
         }
-    }
+    };
 
 
 const Textured_Phong = defs.Textured_Phong =
@@ -778,7 +778,7 @@ const Textured_Phong = defs.Textured_Phong =
                 material.texture.activate(context);
             }
         }
-    }
+    };
 
 
 const Fake_Bump_Map = defs.Fake_Bump_Map =
@@ -801,7 +801,7 @@ const Fake_Bump_Map = defs.Fake_Bump_Map =
             gl_FragColor.xyz += phong_model_lights( normalize( bumped_N ), vertex_worldspace );
           } `;
         }
-    }
+    };
 
 
 const Movement_Controls = defs.Movement_Controls =
@@ -991,7 +991,7 @@ const Movement_Controls = defs.Movement_Controls =
             this.pos = this.inverse().times(vec4(0, 0, 0, 1));
             this.z_axis = this.inverse().times(vec4(0, 0, 1, 0));
         }
-    }
+    };
 
 
 const Program_State_Viewer = defs.Program_State_Viewer =
@@ -1022,7 +1022,7 @@ const Shape_From_File = defs.Shape_From_File =
             // Failure mode:  Loads an empty shape.
             return fetch(filename)
                 .then(response => {
-                    if (response.ok) return Promise.resolve(response.text())
+                    if (response.ok) return Promise.resolve(response.text());
                     else return Promise.reject(response.status)
                 })
                 .then(obj_file_contents => this.parse_into_mesh(obj_file_contents, normalize))
@@ -1139,18 +1139,6 @@ function* triangulate(elements) {
     }
 }
 
-const Particle_Emitter = defs.Particle_Emitter =
-    class Particle_Emitter {
-        constructor() {
-
-        }
-
-        draw(webgl_manager, program_state, model_transform, material) {
-            //const gpu_instance = this.activate(webgl_manager.context);
-
-        }
-    };
-
 const Internal_Subdivision_Sphere = defs.Internal_Subdivision_Sphere =
     class Internal_Subdivision_Sphere extends Shape {                       // **Subdivision_Sphere** defines a Sphere surface, with nice uniform triangles.  A subdivision surface
         // (see Wikipedia article on those) is initially simple, then builds itself into a more and more
@@ -1224,5 +1212,267 @@ const Internal_Subdivision_Sphere = defs.Internal_Subdivision_Sphere =
             this.subdivide_triangle(ac, bc, c, count - 1);
             this.subdivide_triangle(ab, bc, ac, count - 1);
         }
-    }
+    };
 
+const Particle_Shader = defs.Particle_Shader =
+    class Particle_Shader extends Shader {                           // **Shader** loads a GLSL shader program onto your graphics card, starting from a JavaScript string.
+        // To use it, make subclasses of Shader that define these strings of GLSL code.  The base class will
+        // command the GPU to recieve, compile, and run these programs.  In WebGL 1, the shader runs once per
+        // every shape that is drawn onscreen.
+
+        // Extend the class and fill in the abstract functions, some of which define GLSL strings, and others
+        // (update_GPU) which define the extra custom JavaScript code needed to populate your particular shader
+        // program with all the data values it is expecting, such as matrices.  The shader pulls these values
+        // from two places in your JavaScript:  A Material object, for values pertaining to the current shape
+        // only, and a Program_State object, for values pertaining to your entire Scene or program.
+
+        // Your custom Shader has to override the following functions:
+        shared_glsl_code() {
+            return `
+                precision mediump float;
+                varying float vLifetime;
+                varying vec2 f_tex_coord;
+                uniform float animation_time;
+            `
+        }
+
+        vertex_glsl_code() {
+            return this.shared_glsl_code() + `
+                attribute float lifetime;
+                attribute vec2 texture_coord;
+                attribute vec2 tri_corner;
+                attribute vec3 center_offset;
+                attribute vec3 velocity;
+                
+                uniform mat4 model_transform;
+                uniform mat4 projection_camera_model_transform;
+                uniform mat4 camera_matrix;
+                                
+                
+                void main() {
+                  float time = mod(animation_time, lifetime);
+                
+                  vec4 position = vec4(center_offset + (time * velocity), 1.0);
+                
+                  vLifetime = 1.3 - (time / lifetime);
+                  vLifetime = clamp(vLifetime, 0.0, 1.0);
+                  float size = (vLifetime * vLifetime) * 0.05;
+                
+                  vec3 cameraRight = vec3(camera_matrix[0].x, camera_matrix[1].x, camera_matrix[2].x);
+                  vec3 cameraUp = vec3(camera_matrix[0].y, camera_matrix[1].y, camera_matrix[2].y);
+                
+                  position.xyz += (cameraRight * tri_corner.x * size) + (cameraUp * tri_corner.y * size);
+                 
+                  gl_Position = projection_camera_model_transform * position;
+                
+                  f_tex_coord = texture_coord;
+                  vLifetime = lifetime;
+                }
+            `
+        }
+
+        fragment_glsl_code() {
+            return this.shared_glsl_code() + `
+                uniform vec4 particle_color;
+                uniform sampler2D texture;
+                
+                void main (void) {
+                  float time = mod(animation_time, vLifetime);
+                  //float percentOfLife = time / vLifetime;
+                  //percentOfLife = clamp(percentOfLife, 0.0, 1.0);
+                
+                  //float offset = floor(16.0 * percentOfLife);
+                  //float offsetX = floor(mod(offset, 4.0)) / 4.0;
+                  //float offsetY = 0.75 - floor(offset / 4.0) / 4.0;
+                
+                  //vec4 texColor = texture2D(
+                  //  texture, 
+                  //  vec2(
+                  //    (f_tex_coord.x / 4.0) + offsetX,
+                  //    (f_tex_coord.y / 4.0) + offsetY
+                  //));
+                  gl_FragColor = particle_color * texture2D(texture, f_tex_coord);
+                
+
+                  gl_FragColor.a *= vLifetime;
+                }
+            `
+        }
+
+        send_gpu_state(gl, gpu, gpu_state, model_transform) {                                       // send_gpu_state():  Send the state of our whole drawing context to the GPU.
+            const O = vec4(0, 0, 0, 1), camera_center = gpu_state.camera_transform.times(O).to3();
+            gl.uniform3fv(gpu.camera_center, camera_center);
+            // Use the squared scale trick from "Eric's blog" instead of inverse transpose matrix:
+            const squared_scale = model_transform.reduce(
+                (acc, r) => {
+                    return acc.plus(vec4(...r).times_pairwise(r))
+                }, vec4(0, 0, 0, 0)).to3();
+            gl.uniform3fv(gpu.squared_scale, squared_scale);
+            // Send the current matrices to the shader.  Go ahead and pre-compute
+            // the products we'll need of the of the three special matrices and just
+            // cache and send those.  They will be the same throughout this draw
+            // call, and thus across each instance of the vertex shader.
+            // Transpose them since the GPU expects matrices as column-major arrays.
+            const PCM = gpu_state.projection_transform.times(gpu_state.camera_inverse).times(model_transform);
+            gl.uniformMatrix4fv(gpu.model_transform, false, Matrix.flatten_2D_to_1D(model_transform.transposed()));
+            gl.uniformMatrix4fv(gpu.projection_camera_model_transform, false, Matrix.flatten_2D_to_1D(PCM.transposed()));
+            gl.uniformMatrix4fv(gpu.camera_matrix, false, Matrix.flatten_2D_to_1D(gpu_state.camera_inverse.transposed()));
+
+            // Omitting lights will show only the material color, scaled by the ambient term:
+            //if (!gpu_state.lights.length)
+            //   return;
+
+            //const light_positions_flattened = [], light_colors_flattened = [];
+            //for (var i = 0; i < 4 * gpu_state.lights.length; i++) {
+            //    light_positions_flattened.push(gpu_state.lights[Math.floor(i / 4)].position[i % 4]);
+            //    light_colors_flattened.push(gpu_state.lights[Math.floor(i / 4)].color[i % 4]);
+            //}
+            //gl.uniform4fv(gpu.light_positions_or_vectors, light_positions_flattened);
+        }
+
+        update_GPU(context, gpu_addresses, gpu_state, model_transform, material) {
+            const defaults = {};
+            //texture  = Object.assign({}, defaults, material);
+
+            if (material && material.texture.ready) {                         // Select texture unit 0 for the fragment shader Sampler2D uniform called "texture":
+                context.uniform4fv(gpu_addresses.particle_color, material.color);
+                context.uniform1i(gpu_addresses.texture, 0);
+                // For this draw, use the texture image from correct the GPU buffer:
+                material.texture.activate(context);
+            }
+
+            this.send_gpu_state(context, gpu_addresses, gpu_state, model_transform);
+        }
+
+    };
+
+const Particle_Emitter = defs.Particle_Emitter =
+    class Particle_Emitter extends tiny.Graphics_Card_Object {
+        constructor(numParticles) {
+            super();
+
+            this.numParticles = numParticles;
+
+            this.arrays = {};
+            this.arrays.lifetime = [];
+            this.arrays.tri_corner = [];
+            this.arrays.texture_coord = [];
+            this.arrays.center_offset = [];
+            this.arrays.velocity = [];
+
+            this.indices = [];
+
+            this.triCornersCycle = [
+                -1.0, -1.0,
+                1.0, -1.0,
+                1.0, 1.0,
+                -1.0, 1.0
+            ];
+            this.texCoordsCycle = [
+                0, 0,
+                1, 0,
+                1, 1,
+                0, 1
+            ];
+
+            for (let i = 0; i < this.numParticles; i++) {
+                let cur_lifetime = 8 * Math.random();
+                let diameterAroundCenter = 0.5;
+                let halfDiameterAroundCenter = diameterAroundCenter / 2;
+                let xStartOffset = diameterAroundCenter *
+                    Math.random() - halfDiameterAroundCenter;
+                xStartOffset /= 3;
+
+                let yStartOffset = diameterAroundCenter *
+                    Math.random() - halfDiameterAroundCenter;
+                yStartOffset /= 10;
+
+                let zStartOffset = diameterAroundCenter *
+                    Math.random() - halfDiameterAroundCenter;
+                zStartOffset /= 3;
+
+                let upVelocity = 0.1 * Math.random();
+
+                let xSideVelocity = 0.02 * Math.random();
+                if (xStartOffset > 0) {
+                    xSideVelocity *= -1
+                }
+
+                let zSideVelocity = 0.02 * Math.random();
+                if (zStartOffset > 0) {
+                    zSideVelocity *= -1
+                }
+
+                for (let j = 0; j < 4; j++) {
+                    this.arrays.lifetime.push(cur_lifetime);
+
+                    this.arrays.tri_corner.push(this.triCornersCycle[j * 2]);
+                    this.arrays.tri_corner.push(this.triCornersCycle[j * 2 + 1]);
+
+                    this.arrays.texture_coord.push(this.texCoordsCycle[j * 2]);
+                    this.arrays.texture_coord.push(this.texCoordsCycle[j * 2 + 1]);
+
+                    this.arrays.center_offset.push(xStartOffset);
+                    this.arrays.center_offset.push(yStartOffset + Math.abs(xStartOffset / 2.0));
+                    this.arrays.center_offset.push(zStartOffset);
+
+                    this.arrays.velocity.push(xSideVelocity);
+                    this.arrays.velocity.push(upVelocity);
+                    this.arrays.velocity.push(zSideVelocity);
+                }
+
+                this.indices = this.indices.concat([
+                    0, 1, 2, 0, 2, 3
+                ].map((num) => num + 4 * i))
+            }
+            console.log(this.indices)
+        }
+
+        copy_onto_graphics_card(context, selection_of_arrays = Object.keys(this.arrays), write_to_indices = true) {
+            // Define what this object should store in each new WebGL Context:
+            const initial_gpu_representation = {webGL_buffer_pointers: {}};
+            // Our object might need to register to multiple GPU contexts in the case of
+            // multiple drawing areas.  If this is a new GPU context for this object,
+            // copy the object to the GPU.  Otherwise, this object already has been
+            // copied over, so get a pointer to the existing instance.
+            const did_exist = this.gpu_instances.get(context);
+            const gpu_instance = super.copy_onto_graphics_card(context, initial_gpu_representation);
+
+            const gl = context;
+
+            const write = did_exist ? (target, data) => gl.bufferSubData(target, 0, data)
+                : (target, data) => gl.bufferData(target, data, gl.STATIC_DRAW);
+
+
+            for (let name of selection_of_arrays) {
+                if (!did_exist)
+                    gpu_instance.webGL_buffer_pointers[name] = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, gpu_instance.webGL_buffer_pointers[name]);
+                write(gl.ARRAY_BUFFER, new Float32Array(this.arrays[name]));
+            }
+
+            if (!did_exist)
+                gpu_instance.index_buffer = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gpu_instance.index_buffer);
+            write(gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(this.indices));
+
+            return gpu_instance;
+        }
+
+        execute_shaders(gl, gpu_instance, type)     // execute_shaders(): Draws this shape's entire vertex buffer.
+        {
+            //gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gpu_instance.index_buffer);
+            gl.uniform1f(gpu_instance.animation_time, gl.animation_time / 1000);
+            gl.drawElements(gl.TRIANGLES, this.indices.length, gl.UNSIGNED_INT, 0);
+        }
+
+        draw(webgl_manager, program_state, model_transform, material) {                                       // draw():  To appear onscreen, a shape of any variety goes through this function,
+            // which executes the shader programs.  The shaders draw the right shape due to
+            // pre-selecting the correct buffer region in the GPU that holds that shape's data.
+            const gpu_instance = this.activate(webgl_manager.context);
+            material.shader.activate(webgl_manager.context, gpu_instance.webGL_buffer_pointers, program_state, model_transform, material);
+            // Run the shaders to draw every triangle now:
+            this.execute_shaders(webgl_manager.context, gpu_instance);
+        }
+    };

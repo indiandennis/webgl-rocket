@@ -59,7 +59,8 @@ class Main_Scene extends Simulation {
 
             // TODO: TEXTURES
             space: new Texture("assets/textures/gradient.png", "LINEAR_MIPMAP_LINEAR"),
-            sun: new Texture("assets/textures/sun-from-earth.png")
+            sun: new Texture("assets/textures/sun-from-earth.png"),
+            smoke: new Texture("assets/textures/sphere.png"),
         };
 
         this.shapes = {
@@ -82,6 +83,11 @@ class Main_Scene extends Simulation {
             "sun": new defs.Square(),
 
         };
+
+        this.smoke_material = new Material(new defs.Particle_Shader(), {
+            color: color(0, 0, 0, 1),
+            texture: this.textures.smoke,
+        });
 
         this.body_material = new Material(new defs.Textured_Phong(), {
             color: color(0, 0, 0, 1),
@@ -109,7 +115,7 @@ class Main_Scene extends Simulation {
             specularity: .8,
             diffusivity: .1,
             texture: this.textures.metal,
-        })
+        });
 
         this.cloud = new Material(new defs.Phong_Shader(), {
             color: color(1, 1, 1, 1),
@@ -225,6 +231,8 @@ class Main_Scene extends Simulation {
 
         // TODO: LINEAR INTERPOLATION FOR SKY COLOR
         this.color_lerp = 0;
+
+        this.smoke_emitter = new defs.Particle_Emitter(10);
 
     }
 
@@ -368,6 +376,9 @@ class Main_Scene extends Simulation {
         this.space_material.color = color(sky_color[0], sky_color[1], sky_color[2], sky_color[3]);
         this.shapes["space"].draw(context, program_state, Mat4.translation(0, -6309884, 0).times(Mat4.scale(7000000, 7000000, 7000000)), this.space_material);
         this.shapes["sun"].draw(context, program_state, Mat4.translation(100, 500000, 100).times(Mat4.scale(50000, 50000, 50000)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0)), this.sun_material);
+
+        //particle effects
+        this.smoke_emitter.draw(context, program_state, Mat4.translation(20, 100, 0), this.smoke_material);
     }
 }
 
