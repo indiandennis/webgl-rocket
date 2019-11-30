@@ -58,7 +58,8 @@ class Main_Scene extends Simulation {
             body: new Texture("assets/textures/stage-2-body.png"),
 
             // TODO: TEXTURES
-            space: new Texture("assets/textures/gradient.png", "LINEAR_MIPMAP_LINEAR"),
+            sky: new Texture("assets/textures/gradient.png", "LINEAR_MIPMAP_LINEAR"),
+            space: new Texture("assets/textures/space.png", "LINEAR_MIPMAP_LINEAR"),
             sun: new Texture("assets/textures/sun-from-earth.png"),
             smoke: new Texture("assets/textures/sphere.png"),
         };
@@ -79,6 +80,7 @@ class Main_Scene extends Simulation {
             "cloud-1": new defs.Shape_From_File("assets/objects/cloud1.obj"),
 
             // TODO: OBJECTS
+            "sky": new defs.Internal_Subdivision_Sphere(4),
             "space": new defs.Internal_Subdivision_Sphere(4),
             "sun": new defs.Square(),
 
@@ -133,8 +135,15 @@ class Main_Scene extends Simulation {
         });
 
         // TODO: MATERIALS
-        this.space_material = new Material(new defs.Textured_Phong(), {
+        this.sky_material = new Material(new defs.Textured_Phong(), {
             color: color(0.443, 0.694, 0.91, 1),
+            ambient: 1,
+            specularity: 0,
+            diffusivity: 0,
+            texture: this.textures.sky,
+        });
+        this.space_material = new Material(new defs.Textured_Phong(), {
+            color: color(0, 0, 0, 1),
             ambient: 1,
             specularity: 0,
             diffusivity: 0,
@@ -232,6 +241,19 @@ class Main_Scene extends Simulation {
         // TODO: LINEAR INTERPOLATION FOR SKY COLOR
         this.color_lerp = 0;
 
+        // TODO: SEPARATION STAGE ANIMATION FLAGS
+        this.separation_count = 0;
+        this.booster_count = 0;
+        this.booster_angles = [
+                                0,
+                                Math.PI,
+                                2 * Math.PI / 3,
+                                Math.PI / 3,
+                                4 * Math.PI / 3,
+                                5 * Math.PI / 3,
+        ];
+        this.just_detached = false;
+
         this.smoke_emitter = new defs.Particle_Emitter(10);
 
     }
@@ -243,6 +265,8 @@ class Main_Scene extends Simulation {
     action() {
         if (!this.bodies[this.bottom_body].activated) {
             let i = this.bottom_body;
+            this.just_detached = true;
+            this.separation_count += 1;
             do {
                 this.bodies[i].activated = true;
                 this.bodies[0].linear_acceleration = vec3(0, .4, 0);
@@ -296,15 +320,63 @@ class Main_Scene extends Simulation {
                     b.linear_velocity = vec3(0, 0, 0);
                 } else {
                     b.linear_acceleration = vec3(0, 0, 0);
-                    b.linear_velocity = b.linear_velocity.plus(vec3(0, -9.8 * this.scale_factor[0], 0).times(dt));
+                    //b.linear_velocity = b.linear_velocity.plus(vec3(0, -9.8 * this.scale_factor[0], 0).times(dt));
                     b.angular_acceleration = 0;
-                    b.angular_velocity += b.angular_acceleration * dt;
+
+                    if(this.just_detached) {
+
+                        b.linear_velocity = b.linear_velocity.plus(vec3(100, -9.8 * this.scale_factor[0], 0).times(dt / 1000));
+
+                    // TODO: ANIMATE ROTATION OF DEBRIS
+                    if(this.separation_count === 1) {
+                        switch(this.booster_angles[this.booster_count]) {
+                            case 0:
+                                b.spin_axis = vec3(0, 0, 1);
+                                break;
+                            case Math.PI:
+                                b.spin_axis = vec3(0, 0, -1);
+                                break;
+                            case 2 * Math.PI / 3:
+                                b.spin_axis = vec3(Math.sqrt(3) / 2, 0, -1 / 2);
+                                break;
+                            case Math.PI / 3:
+                                b.spin_axis = vec3(Math.sqrt(3) / 2, 0, 1 / 2);
+                                break;
+                            case 4 * Math.PI / 3:
+                                b.spin_axis = vec3(-Math.sqrt(3) / 2, 0, -1 / 2);
+                                break;
+                            case 5 * Math.PI / 3:
+                                b.spin_axis = vec3(-Math.sqrt(3) / 2, 0, 1 / 2);
+                                break;
+                        }
+                        b.angular_velocity = 0.1;
+                        this.booster_count += 1;
+                    }
+                    else if(this.separation_count === 2) {
+                        b.spin_axis = vec3(0.5, 0, -0.75);
+                        b.angular_velocity = 0.01;
+                    }
+                    else if(this.separation_count === 3) {
+                        b.spin_axis = vec3(-0.95, 0, 0.30);
+                        b.angular_velocity = 0.01;
+                    }
+                    else if(this.separation_count === 4) {
+                        b.spin_axis = vec3(0.5, 0, 0.5);
+                        b.angular_velocity = 0.01;
+                    }
+                    else {
+                        b.angular_velocity += b.angular_acceleration * dt;
+                    }
+
+                    }
                 }
 
                 //console.log("hit2")
 
             }
         }
+
+        this.just_detached = false;
     }
 
     check_collisions() {
@@ -354,9 +426,10 @@ class Main_Scene extends Simulation {
         //this.shapes["sphere"].draw(context, program_state, Mat4.translation(0, -63100, 0).times(Mat4.scale(63100, 63100, 63100)), this.cloud);
         this.shapes["sphere"].draw(context, program_state, Mat4.translation(0, -6309884, 0).times(Mat4.scale(6310000, 6310000, 6310000)).times(Mat4.rotation(Math.PI / 2, 1, .5, 1)), this.earth_material);
 
-        // TODO: DRAW SPACE AND SUN
+        // TODO: DRAW SKY, SPACE, AND SUN
         // Color endpoints of the linear interpolation
         let sky_blue = vec4(0.443, 0.694, 0.91, 1);
+        //let space_black = vec4(0.122, 0.349, 0.722, 0);
         let space_black = vec4(0, 0, 0, 1);
 
         // If the rocket is below 15km, color is sky blue
@@ -364,21 +437,23 @@ class Main_Scene extends Simulation {
         // In between, adjust color according to height
         if (this.bodies[0].center[1] < 15000.0) {
             this.color_lerp = 0;
-        } else if (this.bodies[0].center[1] > 500000.0) {
+        } else if (this.bodies[0].center[1] > 250000.0) {
             this.color_lerp = 1;
         } else {
-            this.color_lerp = ((this.bodies[0].center[1] - 15000.0) / 485000.0);
+            this.color_lerp = ((this.bodies[0].center[1] - 15000.0) / 235000.0);
         }
         // Linear interpolation equation
         const sky_color = (sky_blue.times(1 - this.color_lerp)).plus(space_black.times(this.color_lerp));
 
         // Change color of space sphere
-        this.space_material.color = color(sky_color[0], sky_color[1], sky_color[2], sky_color[3]);
-        this.shapes["space"].draw(context, program_state, Mat4.translation(0, -6309884, 0).times(Mat4.scale(7000000, 7000000, 7000000)), this.space_material);
+        this.sky_material.color = color(sky_color[0], sky_color[1], sky_color[2], sky_color[3]);
+        this.shapes["sky"].draw(context, program_state, Mat4.translation(0, -6309884, 0).times(Mat4.scale(7500000, 7500000, 7500000)), this.sky_material);
+        //this.shapes["space"].draw(context, program_state, Mat4.translation(0, -6309884, 0).times(Mat4.scale(7600000, 7600000, 7600000)), this.space_material);
         this.shapes["sun"].draw(context, program_state, Mat4.translation(100, 500000, 100).times(Mat4.scale(50000, 50000, 50000)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0)), this.sun_material);
 
         //particle effects
         this.smoke_emitter.draw(context, program_state, Mat4.translation(20, 100, 0), this.smoke_material);
+
     }
 }
 
