@@ -277,7 +277,6 @@ class Main_Scene extends Simulation {
     action() {
         if (!this.bodies[this.bottom_body].activated) {
             let i = this.bottom_body;
-
             do {
                 this.bodies[i].activated = true;
                 this.bodies[i].shapes[this.bodies[i].shapes.length - 1].enable();
@@ -333,54 +332,86 @@ class Main_Scene extends Simulation {
                     b.linear_velocity = vec3(0, 0, 0);
                 } else {
                     b.linear_acceleration = vec3(0, 0, 0);
-                    b.linear_velocity = b.linear_velocity.plus(vec3(0, -9.8 * this.scale_factor[0], 0).times(dt / 1000));
+                    //b.linear_velocity = b.linear_velocity.plus(vec3(0, -9.8 * this.scale_factor[0], 0).times(dt / 1000));
                     b.angular_acceleration = 0;
 
-                    if (this.just_detached) {
-
-                        b.linear_velocity = b.linear_velocity.plus(vec3(100, 0, 0).times(dt / 1000));
-
-                        // TODO: ANIMATE ROTATION OF DEBRIS
-                        console.log("separation_count", this.separation_count)
-                        if (this.separation_count === 1) {
-                            console.log("separation_count = 1");
-
-                            switch (this.booster_angles[this.booster_count]) {
-                                case 0:
-                                    b.spin_axis = vec3(0, 0, 1);
-                                    break;
-                                case Math.PI:
-                                    b.spin_axis = vec3(0, 0, -1);
-                                    break;
-                                case 2 * Math.PI / 3:
-                                    b.spin_axis = vec3(Math.sqrt(3) / 2, 0, -1 / 2);
-                                    break;
-                                case Math.PI / 3:
-                                    b.spin_axis = vec3(Math.sqrt(3) / 2, 0, 1 / 2);
-                                    break;
-                                case 4 * Math.PI / 3:
-                                    b.spin_axis = vec3(-Math.sqrt(3) / 2, 0, -1 / 2);
-                                    break;
-                                case 5 * Math.PI / 3:
-                                    b.spin_axis = vec3(-Math.sqrt(3) / 2, 0, 1 / 2);
-                                    break;
-                            }
-                            b.angular_velocity = 0.1;
-                            this.booster_count += 1;
-                        } else if (this.separation_count === 2) {
-                            b.spin_axis = vec3(0.5, 0, -0.75);
-                            b.angular_velocity = 0.01;
-                        } else if (this.separation_count === 3) {
-                            b.spin_axis = vec3(-0.95, 0, 0.30);
-                            b.angular_velocity = 0.01;
-                        } else if (this.separation_count === 4) {
-                            b.spin_axis = vec3(0.5, 0, 0.5);
-                            b.angular_velocity = 0.01;
-                        } else {
-                            b.angular_velocity += b.angular_acceleration * dt;
+                    // TODO: ANIMATE DRIFTING OF DEBRIS
+                    if(this.just_detached) {
+                        switch(i) {
+                            case 1:
+                                b.linear_velocity = b.linear_velocity.plus(vec3(-500, -9.8 * this.scale_factor[0], 500).times(dt / 1000));
+                                break;
+                            case 2:
+                                b.linear_velocity = b.linear_velocity.plus(vec3(-950, -9.8 * this.scale_factor[0], 300).times(dt / 1000));
+                                break;
+                            case 3:
+                                b.linear_velocity = b.linear_velocity.plus(vec3(500, -9.8 * this.scale_factor[0], 750).times(dt / 1000));
+                                break;
+                            case 4:
+                                b.linear_velocity = b.linear_velocity.plus(vec3(-1000, -9.8 * this.scale_factor[0], 0).times(dt / 1000));
+                                break;
+                            case 5:
+                                b.linear_velocity = b.linear_velocity.plus(vec3(1000, -9.8 * this.scale_factor[0], 0).times(dt / 1000));
+                                break;
+                            case 6:
+                                b.linear_velocity = b.linear_velocity.plus(vec3(500, -9.8 * this.scale_factor[0], (Math.sqrt(3) / 2) * 1000).times(dt / 1000));
+                                break;
+                            case 7:
+                                b.linear_velocity = b.linear_velocity.plus(vec3(-500, -9.8 * this.scale_factor[0], (Math.sqrt(3) / 2) * 1000).times(dt / 1000));
+                                break;
+                            case 8:
+                                b.linear_velocity = b.linear_velocity.plus(vec3(500, -9.8 * this.scale_factor[0], -(Math.sqrt(3) / 2) * 1000).times(dt / 1000));
+                                break;
+                            case 9:
+                                b.linear_velocity = b.linear_velocity.plus(vec3(-500, -9.8 * this.scale_factor[0], -(Math.sqrt(3) / 2) * 1000).times(dt / 1000));
+                                break;
+                            default:
+                                b.linear_velocity = b.linear_velocity.plus(vec3(0, -9.8 * this.scale_factor[0], 0).times(dt / 1000));
                         }
-
                     }
+
+
+                    // TODO: ANIMATE ROTATION OF DEBRIS
+                    if(this.separation_count === 1 && i > 3 && i < 10) {
+                        switch(this.booster_angles[this.booster_count]) {
+                            case 0:
+                                b.spin_axis = vec3(0, 0, 1);
+                                break;
+                            case Math.PI:
+                                b.spin_axis = vec3(0, 0, -1);
+                                break;
+                            case 2 * Math.PI / 3:
+                                b.spin_axis = vec3(Math.sqrt(3) / 2, 0, -1 / 2);
+                                break;
+                            case Math.PI / 3:
+                                b.spin_axis = vec3(Math.sqrt(3) / 2, 0, 1 / 2);
+                                break;
+                            case 4 * Math.PI / 3:
+                                b.spin_axis = vec3(-Math.sqrt(3) / 2, 0, -1 / 2);
+                                break;
+                            case 5 * Math.PI / 3:
+                                b.spin_axis = vec3(-Math.sqrt(3) / 2, 0, 1 / 2);
+                                break;
+                        }
+                        b.angular_velocity = 0.1;
+                        this.booster_count += 1;
+                    }
+                    else if(this.separation_count === 2 && i === 3) {
+                        b.spin_axis = vec3(0.5, 0, -0.75);
+                        b.angular_velocity = 0.01;
+                    }
+                    else if(this.separation_count === 3 && i === 2) {
+                        b.spin_axis = vec3(-0.95, 0, 0.30);
+                        b.angular_velocity = 0.01;
+                    }
+                    else if(this.separation_count === 4 && i === 1) {
+                        b.spin_axis = vec3(0.5, 0, 0.5);
+                        b.angular_velocity = 0.01;
+                    }
+                    else {
+                        b.angular_velocity += b.angular_acceleration * dt;
+                    }
+
                 }
 
                 //console.log("hit2")
