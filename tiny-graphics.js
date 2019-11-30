@@ -1200,7 +1200,7 @@ const Webgl_Manager = tiny.Webgl_Manager =
             // Specify an interpolation method for blending "transparent" triangles over the existing pixels:
             gl.enable(gl.BLEND);
 
-            //gl.enable(gl.CULL_FACE);
+            gl.enable(gl.CULL_FACE);
             //gl.cullFace(gl.BACK);
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
             // Store a single red pixel, as a placeholder image to prevent a console warning:

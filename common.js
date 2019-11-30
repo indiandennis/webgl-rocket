@@ -1226,6 +1226,11 @@ const Particle_Shader = defs.Particle_Shader =
         // from two places in your JavaScript:  A Material object, for values pertaining to the current shape
         // only, and a Program_State object, for values pertaining to your entire Scene or program.
 
+        constructor(size = 1.0) {
+            super();
+            this.size = size;
+        }
+
         // Your custom Shader has to override the following functions:
         shared_glsl_code() {
             return `
@@ -1233,6 +1238,12 @@ const Particle_Shader = defs.Particle_Shader =
                 varying float vLifetime;
                 varying vec2 f_tex_coord;
                 uniform float animation_time;
+                
+                float PHI = 1.61803398874989484820459; // Golden Ratio   
+
+                float gold_noise(in vec2 xy, in float seed){
+                    return fract(tan(distance(xy*PHI, xy)*seed)*xy.x);
+                }
             `
         }
 
@@ -1244,6 +1255,8 @@ const Particle_Shader = defs.Particle_Shader =
                 attribute vec3 center_offset;
                 attribute vec3 velocity;
                 
+                uniform float initial_size;
+                
                 uniform mat4 model_transform;
                 uniform mat4 projection_camera_model_transform;
                 uniform mat4 camera_matrix;
@@ -1253,10 +1266,15 @@ const Particle_Shader = defs.Particle_Shader =
                   float time = mod(animation_time, lifetime);
                 
                   vec4 position = vec4(center_offset + (time * velocity), 1.0);
-                
+                  
                   vLifetime = 1.3 - (time / lifetime);
                   vLifetime = clamp(vLifetime, 0.0, 1.0);
-                  float size = (vLifetime * vLifetime) * 0.05;
+                  float size =  initial_size + time * 2.0;
+                  
+                  vec4 startPos = model_transform[3];
+                  //
+                
+                  
                 
                   vec3 cameraRight = vec3(camera_matrix[0].x, camera_matrix[1].x, camera_matrix[2].x);
                   vec3 cameraUp = vec3(camera_matrix[0].y, camera_matrix[1].y, camera_matrix[2].y);
@@ -1264,6 +1282,8 @@ const Particle_Shader = defs.Particle_Shader =
                   position.xyz += (cameraRight * tri_corner.x * size) + (cameraUp * tri_corner.y * size);
                  
                   gl_Position = projection_camera_model_transform * position;
+                  
+                  
                 
                   f_tex_coord = texture_coord;
                   vLifetime = lifetime;
@@ -1278,8 +1298,8 @@ const Particle_Shader = defs.Particle_Shader =
                 
                 void main (void) {
                   float time = mod(animation_time, vLifetime);
-                  //float percentOfLife = time / vLifetime;
-                  //percentOfLife = clamp(percentOfLife, 0.0, 1.0);
+                  float percentOfLife = time / vLifetime;
+                  percentOfLife = clamp(percentOfLife, 0.0, 1.0);
                 
                   //float offset = floor(16.0 * percentOfLife);
                   //float offsetX = floor(mod(offset, 4.0)) / 4.0;
@@ -1291,10 +1311,16 @@ const Particle_Shader = defs.Particle_Shader =
                   //    (f_tex_coord.x / 4.0) + offsetX,
                   //    (f_tex_coord.y / 4.0) + offsetY
                   //));
-                  gl_FragColor = particle_color * texture2D(texture, f_tex_coord);
+                  vec3 fireColor =  clamp(1.0 - percentOfLife * 10.0, 0.0, 1.0) * vec3(1, .4, 0);
+                  vec4 color = texture2D(texture, f_tex_coord);
+                  color.xyz += fireColor;
+                  //color.a *= vLifetime;
+                  if (color.a <= 0.1) discard;
+                  
+                  gl_FragColor = color;
                 
-
-                  gl_FragColor.a *= vLifetime;
+                  //gl_FragColor = vec4(animation_time, 0, 0, 1);
+                  
                 }
             `
         }
@@ -1318,6 +1344,9 @@ const Particle_Shader = defs.Particle_Shader =
             gl.uniformMatrix4fv(gpu.projection_camera_model_transform, false, Matrix.flatten_2D_to_1D(PCM.transposed()));
             gl.uniformMatrix4fv(gpu.camera_matrix, false, Matrix.flatten_2D_to_1D(gpu_state.camera_inverse.transposed()));
 
+            gl.uniform1f(gpu.animation_time, gpu_state.animation_time / 1000);
+
+
             // Omitting lights will show only the material color, scaled by the ambient term:
             //if (!gpu_state.lights.length)
             //   return;
@@ -1337,6 +1366,8 @@ const Particle_Shader = defs.Particle_Shader =
             if (material && material.texture.ready) {                         // Select texture unit 0 for the fragment shader Sampler2D uniform called "texture":
                 context.uniform4fv(gpu_addresses.particle_color, material.color);
                 context.uniform1i(gpu_addresses.texture, 0);
+                context.uniform1f(gpu_addresses.initial_size, this.size);
+
                 // For this draw, use the texture image from correct the GPU buffer:
                 material.texture.activate(context);
             }
@@ -1377,7 +1408,7 @@ const Particle_Emitter = defs.Particle_Emitter =
 
             for (let i = 0; i < this.numParticles; i++) {
                 let cur_lifetime = 8 * Math.random();
-                let diameterAroundCenter = 0.5;
+                let diameterAroundCenter = 2;
                 let halfDiameterAroundCenter = diameterAroundCenter / 2;
                 let xStartOffset = diameterAroundCenter *
                     Math.random() - halfDiameterAroundCenter;
@@ -1391,14 +1422,14 @@ const Particle_Emitter = defs.Particle_Emitter =
                     Math.random() - halfDiameterAroundCenter;
                 zStartOffset /= 3;
 
-                let upVelocity = 0.1 * Math.random();
+                let upVelocity = -50 * Math.random() - 50;
 
-                let xSideVelocity = 0.02 * Math.random();
+                let xSideVelocity = 2 * Math.random();
                 if (xStartOffset > 0) {
                     xSideVelocity *= -1
                 }
 
-                let zSideVelocity = 0.02 * Math.random();
+                let zSideVelocity = 2 * Math.random();
                 if (zStartOffset > 0) {
                     zSideVelocity *= -1
                 }
@@ -1455,16 +1486,14 @@ const Particle_Emitter = defs.Particle_Emitter =
                 gpu_instance.index_buffer = gl.createBuffer();
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gpu_instance.index_buffer);
             write(gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(this.indices));
-
             return gpu_instance;
         }
 
-        execute_shaders(gl, gpu_instance, type)     // execute_shaders(): Draws this shape's entire vertex buffer.
+        execute_shaders(gl, gpu_instance)     // execute_shaders(): Draws this shape's entire vertex buffer.
         {
             //gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gpu_instance.index_buffer);
-            gl.uniform1f(gpu_instance.animation_time, gl.animation_time / 1000);
-            gl.drawElements(gl.TRIANGLES, this.indices.length, gl.UNSIGNED_INT, 0);
+            gl.drawElements(gl.TRIANGLES, this.indices.length, gl.UNSIGNED_INT, 0)
         }
 
         draw(webgl_manager, program_state, model_transform, material) {                                       // draw():  To appear onscreen, a shape of any variety goes through this function,

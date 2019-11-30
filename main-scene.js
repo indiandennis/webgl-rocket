@@ -61,7 +61,7 @@ class Main_Scene extends Simulation {
             sky: new Texture("assets/textures/gradient.png", "LINEAR_MIPMAP_LINEAR"),
             space: new Texture("assets/textures/space.png", "LINEAR_MIPMAP_LINEAR"),
             sun: new Texture("assets/textures/sun-from-earth.png"),
-            smoke: new Texture("assets/textures/sphere.png"),
+            smoke: new Texture("assets/textures/sphere.png", "LINEAR"),
         };
 
         this.shapes = {
@@ -241,6 +241,7 @@ class Main_Scene extends Simulation {
         // TODO: LINEAR INTERPOLATION FOR SKY COLOR
         this.color_lerp = 0;
 
+        this.smoke_emitter = new defs.Particle_Emitter(10000);
         // TODO: SEPARATION STAGE ANIMATION FLAGS
         this.separation_count = 0;
         this.booster_count = 0;
@@ -254,7 +255,6 @@ class Main_Scene extends Simulation {
         ];
         this.just_detached = false;
 
-        this.smoke_emitter = new defs.Particle_Emitter(10);
 
     }
 
@@ -266,7 +266,7 @@ class Main_Scene extends Simulation {
         if (!this.bodies[this.bottom_body].activated) {
             let i = this.bottom_body;
             this.just_detached = true;
-           
+
             do {
                 this.bodies[i].activated = true;
                 this.bodies[0].linear_acceleration = vec3(0, .4, 0);
@@ -333,7 +333,7 @@ class Main_Scene extends Simulation {
                     console.log("separation_count", this.separation_count)
                     if(this.separation_count === 1) {
                         console.log("separation_count = 1");
-                       
+
                         switch(this.booster_angles[this.booster_count]) {
                             case 0:
                                 b.spin_axis = vec3(0, 0, 1);
@@ -457,8 +457,7 @@ class Main_Scene extends Simulation {
         this.shapes["sun"].draw(context, program_state, Mat4.translation(100, 500000, 100).times(Mat4.scale(50000, 50000, 50000)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0)), this.sun_material);
 
         //particle effects
-        this.smoke_emitter.draw(context, program_state, Mat4.translation(20, 100, 0), this.smoke_material);
-
+        this.smoke_emitter.draw(context, program_state, Mat4.translation(20, 50, 0), this.smoke_material);
     }
 }
 
