@@ -266,12 +266,13 @@ class Main_Scene extends Simulation {
         if (!this.bodies[this.bottom_body].activated) {
             let i = this.bottom_body;
             this.just_detached = true;
-            this.separation_count += 1;
+           
             do {
                 this.bodies[i].activated = true;
                 this.bodies[0].linear_acceleration = vec3(0, .4, 0);
                 i--;
             } while (i > 3);
+
         } else {
             do {
                 this.bodies[this.bottom_body].attached = false;
@@ -280,6 +281,7 @@ class Main_Scene extends Simulation {
                 if (this.bottom_body < 0)
                     alert("End of Simulation");
             } while (this.bottom_body > 3)
+              this.separation_count += 1;
         }
         console.log(this.bodies);
         console.log(this.bottom_body);
@@ -328,7 +330,10 @@ class Main_Scene extends Simulation {
                         b.linear_velocity = b.linear_velocity.plus(vec3(100, -9.8 * this.scale_factor[0], 0).times(dt / 1000));
 
                     // TODO: ANIMATE ROTATION OF DEBRIS
+                    console.log("separation_count", this.separation_count)
                     if(this.separation_count === 1) {
+                        console.log("separation_count = 1");
+                       
                         switch(this.booster_angles[this.booster_count]) {
                             case 0:
                                 b.spin_axis = vec3(0, 0, 1);
