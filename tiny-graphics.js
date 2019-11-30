@@ -722,10 +722,10 @@ const Vertex_Buffer = tiny.Vertex_Buffer =
         }
 
         copy_onto_graphics_card(context, selection_of_arrays = Object.keys(this.arrays), write_to_indices = true) {           // copy_onto_graphics_card():  Called automatically as needed to load this vertex array set onto
-                                                                                                                              // one of your GPU contexts for its first time.  Send the completed vertex and index lists to
-                                                                                                                              // their own buffers within any of your existing graphics card contexts.  Optional arguments
-                                                                                                                              // allow calling this again to overwrite the GPU buffers related to this shape's arrays, or
-                                                                                                                              // subsets of them as needed (if only some fields of your shape have changed).
+            // one of your GPU contexts for its first time.  Send the completed vertex and index lists to
+            // their own buffers within any of your existing graphics card contexts.  Optional arguments
+            // allow calling this again to overwrite the GPU buffers related to this shape's arrays, or
+            // subsets of them as needed (if only some fields of your shape have changed).
 
             // Define what this object should store in each new WebGL Context:
             const initial_gpu_representation = {webGL_buffer_pointers: {}};
@@ -1200,7 +1200,7 @@ const Webgl_Manager = tiny.Webgl_Manager =
             // Specify an interpolation method for blending "transparent" triangles over the existing pixels:
             gl.enable(gl.BLEND);
 
-            gl.enable(gl.CULL_FACE);
+            //gl.enable(gl.CULL_FACE);
             //gl.cullFace(gl.BACK);
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
             // Store a single red pixel, as a placeholder image to prevent a console warning:

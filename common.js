@@ -1272,8 +1272,12 @@ const Particle_Shader = defs.Particle_Shader =
                   float size =  initial_size + time * 2.0;
                   
                   vec4 startPos = model_transform[3];
-                  //
-                
+                  if(startPos.y + position.y <= 6.0) {
+                    position.y = 6.0 + gold_noise(vec2(center_offset.x, center_offset.y), animation_time + 1.1) - startPos.y;
+                    position.x += velocity.x * 100.0;
+                    position.z += velocity.z * 100.0;
+                    //size +=  gold_noise(vec2(center_offset.x, center_offset.y), animation_time + 3.2) * 1.0;
+                  }
                   
                 
                   vec3 cameraRight = vec3(camera_matrix[0].x, camera_matrix[1].x, camera_matrix[2].x);
@@ -1383,6 +1387,7 @@ const Particle_Emitter = defs.Particle_Emitter =
             super();
 
             this.numParticles = numParticles;
+            this.enabled = false;
 
             this.arrays = {};
             this.arrays.lifetime = [];
@@ -1456,7 +1461,12 @@ const Particle_Emitter = defs.Particle_Emitter =
                     0, 1, 2, 0, 2, 3
                 ].map((num) => num + 4 * i))
             }
-            console.log(this.indices)
+        }
+
+        enable() {
+
+            this.enabled = true;
+
         }
 
         copy_onto_graphics_card(context, selection_of_arrays = Object.keys(this.arrays), write_to_indices = true) {
@@ -1499,9 +1509,11 @@ const Particle_Emitter = defs.Particle_Emitter =
         draw(webgl_manager, program_state, model_transform, material) {                                       // draw():  To appear onscreen, a shape of any variety goes through this function,
             // which executes the shader programs.  The shaders draw the right shape due to
             // pre-selecting the correct buffer region in the GPU that holds that shape's data.
-            const gpu_instance = this.activate(webgl_manager.context);
-            material.shader.activate(webgl_manager.context, gpu_instance.webGL_buffer_pointers, program_state, model_transform, material);
-            // Run the shaders to draw every triangle now:
-            this.execute_shaders(webgl_manager.context, gpu_instance);
+            if (this.enabled) {
+                const gpu_instance = this.activate(webgl_manager.context);
+                material.shader.activate(webgl_manager.context, gpu_instance.webGL_buffer_pointers, program_state, model_transform, material);
+                // Run the shaders to draw every triangle now:
+                this.execute_shaders(webgl_manager.context, gpu_instance);
+            }
         }
     };

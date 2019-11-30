@@ -86,10 +86,23 @@ class Main_Scene extends Simulation {
 
         };
 
-        this.smoke_material = new Material(new defs.Particle_Shader(), {
+        this.emitters = {
+            "booster": new defs.Particle_Emitter(10000),
+            "stage-2": new defs.Particle_Emitter(10000),
+            "stage-3": new defs.Particle_Emitter(10000),
+            "stage-4": new defs.Particle_Emitter(10000),
+        };
+
+        this.booster_smoke_material = new Material(new defs.Particle_Shader(.5), {
             color: color(0, 0, 0, 1),
             texture: this.textures.smoke,
         });
+
+        this.stage_2_smoke_material = new Material(new defs.Particle_Shader(2.0), {
+            color: color(0, 0, 0, 1),
+            texture: this.textures.smoke,
+        });
+
 
         this.body_material = new Material(new defs.Textured_Phong(), {
             color: color(0, 0, 0, 1),
@@ -153,7 +166,8 @@ class Main_Scene extends Simulation {
             color: color(0, 0, 0, 1),
             ambient: 1,
             texture: this.textures.sun,
-        })
+        });
+
 
         this.scale_factor = vec3(1, 1, 1);
 
@@ -168,65 +182,65 @@ class Main_Scene extends Simulation {
                 [vec3(-4, 0, -4), vec3(4, 18, 4)]
             ).emplace(Mat4.translation(0, 56, 0), vec3(0, 0, 0), 0, false),
             new Body(
-                [this.shapes["stage-4-body"], this.shapes["stage-4-engine"]],
-                [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0)],
-                [this.rocket_material, this.metal_material],
+                [this.shapes["stage-4-body"], this.shapes["stage-4-engine"], this.emitters["stage-4"]],
+                [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0), Mat4.translation(0, -1, 0)],
+                [this.rocket_material, this.metal_material, this.booster_smoke_material],
                 this.scale_factor,
                 [vec3(-3, -1, -3), vec3(3, 6, 3)] //TODO: verify this is correct
             ).emplace(Mat4.translation(0, 50, 0), vec3(0, 0, 0), 0),
             new Body(
-                [this.shapes["stage-3-body"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"]],
-                [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0), Mat4.translation(-2.5, 0, 0), Mat4.translation(-2.5, 0, +2.5), Mat4.translation(0, 0, +2.5)],
-                [this.body_material, this.metal_material, this.metal_material, this.metal_material, this.metal_material],
+                [this.shapes["stage-3-body"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"], this.emitters["stage-3"], this.emitters["stage-3"], this.emitters["stage-3"], this.emitters["stage-3"]],
+                [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0), Mat4.translation(-2.5, 0, 0), Mat4.translation(-2.5, 0, +2.5), Mat4.translation(0, 0, +2.5), Mat4.translation(1.25, -1, -1.25), Mat4.translation(-1.25, -1, -1.25), Mat4.translation(-1.25, -1, +1.25), Mat4.translation(+1.25, -1, +1.25)],
+                [this.body_material, this.metal_material, this.metal_material, this.metal_material, this.metal_material, this.booster_smoke_material, this.booster_smoke_material, this.booster_smoke_material, this.booster_smoke_material],
                 this.scale_factor,
                 [vec3(-3, -1, -3), vec3(3, 25, 3)]
             ).emplace(Mat4.translation(0, 25, 0), vec3(0, 0, 0), 0),
             new Body(
-                [this.shapes["stage-2-body"], this.shapes["stage-2-engine"]],
-                [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0)],
-                [this.rocket_material, this.metal_material],
+                [this.shapes["stage-2-body"], this.shapes["stage-2-engine"], this.emitters["stage-2"]],
+                [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0), Mat4.translation(0, -2.5, 0)],
+                [this.rocket_material, this.metal_material, this.stage_2_smoke_material],
                 this.scale_factor,
                 [vec3(-3, -2, -3), vec3(3, 25, 3)]
             ).emplace(Mat4.translation(0, 0, 0), vec3(0, 0, 0), 0),
             new Body(
-                [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
-                [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
-                [this.rocket_material, this.rocket_material, this.metal_material],
+                [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"], this.emitters["booster"]],
+                [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0), Mat4.translation(.25, -1.1, .1)],
+                [this.rocket_material, this.rocket_material, this.metal_material, this.booster_smoke_material],
                 this.scale_factor,
                 [vec3(-1.5, -1, -1.5), vec3(1.5, 24, 1.5)]
             ).emplace(Mat4.translation(-4.5, 0, 0), vec3(0, 0, 0), 0),
             new Body(
-                [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
-                [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
-                [this.rocket_material, this.rocket_material, this.metal_material],
+                [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"], this.emitters["booster"]],
+                [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0), Mat4.translation(.25, -1.1, .1)],
+                [this.rocket_material, this.rocket_material, this.metal_material, this.booster_smoke_material],
                 this.scale_factor,
                 [vec3(-1.5, -1, -1.5), vec3(1.5, 24, 1.5)]
             ).emplace(Mat4.translation(4.5, 0, 0).times(Mat4.rotation(Math.PI, 0, 1, 0)), vec3(0, 0, 0), 0),
             new Body(
-                [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
-                [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
-                [this.rocket_material, this.rocket_material, this.metal_material],
+                [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"], this.emitters["booster"]],
+                [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0), Mat4.translation(.25, -1.1, .1)],
+                [this.rocket_material, this.rocket_material, this.metal_material, this.booster_smoke_material],
                 this.scale_factor,
                 [vec3(-1.5, -1, -1.5), vec3(1.5, 24, 1.5)]
             ).emplace(Mat4.translation(4.5 / 2, 0, Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(2 * Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
             new Body(
-                [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
-                [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
-                [this.rocket_material, this.rocket_material, this.metal_material],
+                [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"], this.emitters["booster"]],
+                [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0), Mat4.translation(.25, -1.1, .1)],
+                [this.rocket_material, this.rocket_material, this.metal_material, this.booster_smoke_material],
                 this.scale_factor,
                 [vec3(-1.5, -1, -1.5), vec3(1.5, 24, 1.5)]
             ).emplace(Mat4.translation(-4.5 / 2, 0, Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
             new Body(
-                [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
-                [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
-                [this.rocket_material, this.rocket_material, this.metal_material],
+                [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"], this.emitters["booster"]],
+                [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0), Mat4.translation(.25, -1.1, .1)],
+                [this.rocket_material, this.rocket_material, this.metal_material, this.booster_smoke_material],
                 this.scale_factor,
                 [vec3(-1.5, -1, -1.5), vec3(1.5, 24, 1.5)]
             ).emplace(Mat4.translation(4.5 / 2, 0, -Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(4 * Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
             new Body(
-                [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"]],
-                [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0)],
-                [this.rocket_material, this.rocket_material, this.metal_material],
+                [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"], this.emitters["booster"]],
+                [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0), Mat4.translation(.25, -1.1, .1)],
+                [this.rocket_material, this.rocket_material, this.metal_material, this.booster_smoke_material],
                 this.scale_factor,
                 [vec3(-1.5, -1, -1.5), vec3(1.5, 24, 1.5)]
             ).emplace(Mat4.translation(-4.5 / 2, 0, -Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(5 * Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
@@ -241,20 +255,18 @@ class Main_Scene extends Simulation {
         // TODO: LINEAR INTERPOLATION FOR SKY COLOR
         this.color_lerp = 0;
 
-        this.smoke_emitter = new defs.Particle_Emitter(10000);
         // TODO: SEPARATION STAGE ANIMATION FLAGS
         this.separation_count = 0;
         this.booster_count = 0;
         this.booster_angles = [
-                                0,
-                                Math.PI,
-                                2 * Math.PI / 3,
-                                Math.PI / 3,
-                                4 * Math.PI / 3,
-                                5 * Math.PI / 3,
+            0,
+            Math.PI,
+            2 * Math.PI / 3,
+            Math.PI / 3,
+            4 * Math.PI / 3,
+            5 * Math.PI / 3,
         ];
         this.just_detached = false;
-
 
     }
 
@@ -265,27 +277,26 @@ class Main_Scene extends Simulation {
     action() {
         if (!this.bodies[this.bottom_body].activated) {
             let i = this.bottom_body;
-            this.just_detached = true;
 
             do {
                 this.bodies[i].activated = true;
+                this.bodies[i].shapes[this.bodies[i].shapes.length - 1].enable();
                 this.bodies[0].linear_acceleration = vec3(0, .4, 0);
                 i--;
             } while (i > 3);
 
         } else {
+            this.just_detached = true;
             do {
                 this.bodies[this.bottom_body].attached = false;
                 this.bodies[this.bottom_body].activated = false;
+                this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
                 this.bottom_body--;
                 if (this.bottom_body < 0)
                     alert("End of Simulation");
-            } while (this.bottom_body > 3)
-              this.separation_count += 1;
+            } while (this.bottom_body > 3);
+            this.separation_count += 1;
         }
-        console.log(this.bodies);
-        console.log(this.bottom_body);
-
     }
 
     update_state(dt) {
@@ -322,56 +333,52 @@ class Main_Scene extends Simulation {
                     b.linear_velocity = vec3(0, 0, 0);
                 } else {
                     b.linear_acceleration = vec3(0, 0, 0);
-                    //b.linear_velocity = b.linear_velocity.plus(vec3(0, -9.8 * this.scale_factor[0], 0).times(dt));
+                    b.linear_velocity = b.linear_velocity.plus(vec3(0, -9.8 * this.scale_factor[0], 0).times(dt / 1000));
                     b.angular_acceleration = 0;
 
-                    if(this.just_detached) {
+                    if (this.just_detached) {
 
-                        b.linear_velocity = b.linear_velocity.plus(vec3(100, -9.8 * this.scale_factor[0], 0).times(dt / 1000));
+                        b.linear_velocity = b.linear_velocity.plus(vec3(100, 0, 0).times(dt / 1000));
 
-                    // TODO: ANIMATE ROTATION OF DEBRIS
-                    console.log("separation_count", this.separation_count)
-                    if(this.separation_count === 1) {
-                        console.log("separation_count = 1");
+                        // TODO: ANIMATE ROTATION OF DEBRIS
+                        console.log("separation_count", this.separation_count)
+                        if (this.separation_count === 1) {
+                            console.log("separation_count = 1");
 
-                        switch(this.booster_angles[this.booster_count]) {
-                            case 0:
-                                b.spin_axis = vec3(0, 0, 1);
-                                break;
-                            case Math.PI:
-                                b.spin_axis = vec3(0, 0, -1);
-                                break;
-                            case 2 * Math.PI / 3:
-                                b.spin_axis = vec3(Math.sqrt(3) / 2, 0, -1 / 2);
-                                break;
-                            case Math.PI / 3:
-                                b.spin_axis = vec3(Math.sqrt(3) / 2, 0, 1 / 2);
-                                break;
-                            case 4 * Math.PI / 3:
-                                b.spin_axis = vec3(-Math.sqrt(3) / 2, 0, -1 / 2);
-                                break;
-                            case 5 * Math.PI / 3:
-                                b.spin_axis = vec3(-Math.sqrt(3) / 2, 0, 1 / 2);
-                                break;
+                            switch (this.booster_angles[this.booster_count]) {
+                                case 0:
+                                    b.spin_axis = vec3(0, 0, 1);
+                                    break;
+                                case Math.PI:
+                                    b.spin_axis = vec3(0, 0, -1);
+                                    break;
+                                case 2 * Math.PI / 3:
+                                    b.spin_axis = vec3(Math.sqrt(3) / 2, 0, -1 / 2);
+                                    break;
+                                case Math.PI / 3:
+                                    b.spin_axis = vec3(Math.sqrt(3) / 2, 0, 1 / 2);
+                                    break;
+                                case 4 * Math.PI / 3:
+                                    b.spin_axis = vec3(-Math.sqrt(3) / 2, 0, -1 / 2);
+                                    break;
+                                case 5 * Math.PI / 3:
+                                    b.spin_axis = vec3(-Math.sqrt(3) / 2, 0, 1 / 2);
+                                    break;
+                            }
+                            b.angular_velocity = 0.1;
+                            this.booster_count += 1;
+                        } else if (this.separation_count === 2) {
+                            b.spin_axis = vec3(0.5, 0, -0.75);
+                            b.angular_velocity = 0.01;
+                        } else if (this.separation_count === 3) {
+                            b.spin_axis = vec3(-0.95, 0, 0.30);
+                            b.angular_velocity = 0.01;
+                        } else if (this.separation_count === 4) {
+                            b.spin_axis = vec3(0.5, 0, 0.5);
+                            b.angular_velocity = 0.01;
+                        } else {
+                            b.angular_velocity += b.angular_acceleration * dt;
                         }
-                        b.angular_velocity = 0.1;
-                        this.booster_count += 1;
-                    }
-                    else if(this.separation_count === 2) {
-                        b.spin_axis = vec3(0.5, 0, -0.75);
-                        b.angular_velocity = 0.01;
-                    }
-                    else if(this.separation_count === 3) {
-                        b.spin_axis = vec3(-0.95, 0, 0.30);
-                        b.angular_velocity = 0.01;
-                    }
-                    else if(this.separation_count === 4) {
-                        b.spin_axis = vec3(0.5, 0, 0.5);
-                        b.angular_velocity = 0.01;
-                    }
-                    else {
-                        b.angular_velocity += b.angular_acceleration * dt;
-                    }
 
                     }
                 }
@@ -380,7 +387,6 @@ class Main_Scene extends Simulation {
 
             }
         }
-
         this.just_detached = false;
     }
 
@@ -390,7 +396,7 @@ class Main_Scene extends Simulation {
             for (let j = i + 1; j < this.bodies.length; j++) {
                 //only check collisions if at least one body is not attached
                 if ((!b.attached || !this.bodies[j].attached) && b.check_collision(this.bodies[j].hitbox, this.bodies[j].center)) {
-                    //console.log("boom");
+                    //console.log("boom");b
 
                 }
             }
@@ -457,7 +463,7 @@ class Main_Scene extends Simulation {
         this.shapes["sun"].draw(context, program_state, Mat4.translation(100, 500000, 100).times(Mat4.scale(50000, 50000, 50000)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0)), this.sun_material);
 
         //particle effects
-        this.smoke_emitter.draw(context, program_state, Mat4.translation(20, 50, 0), this.smoke_material);
+        //this.smoke_emitter.draw(context, program_state, Mat4.translation(20, 50, 0), this.smoke_material);
     }
 }
 
