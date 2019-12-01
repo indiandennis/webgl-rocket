@@ -165,6 +165,7 @@ class Main_Scene extends Simulation {
         this.sun_material = new Material(new defs.Textured_Phong(), {
             color: color(0, 0, 0, 1),
             ambient: 1,
+            diffusivity: 0,
             texture: this.textures.sun,
         });
 
@@ -553,7 +554,7 @@ class Main_Scene extends Simulation {
         this.shapes["sky"].draw(context, program_state, Mat4.translation(0, -6309884, 0).times(Mat4.scale(8000000, 8000000, 8000000)), this.sky_material);
         //this.shapes["space"].draw(context, program_state, Mat4.translation(0, -6309884, 0).times(Mat4.scale(7600000, 7600000, 7600000)), this.space_material);
         this.shapes["sun"].draw(context, program_state, Mat4.translation(100000, 1500000, 250000)
-                                                        .times(Mat4.scale(80000, 80000, 80000))
+                                                        .times(Mat4.scale(85000, 85000, 85000))
                                                         .times(Mat4.rotation(1.2, -0.8, 0, -0.2)), this.sun_material);
 
         //particle effects
