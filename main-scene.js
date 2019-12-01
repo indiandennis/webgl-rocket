@@ -315,7 +315,7 @@ class Main_Scene extends Simulation {
         //TODO: update this to handle checking boosters, collisions, accelerations, and stuff
         for (let [i, b] of this.bodies.entries()) {
             if (i === 0) {
-                if (this.bodies[this.bottom_body].activated) {
+                if (this.bodies[this.bottom_body].activated && this.currently_firing) {
                     if (b.linear_acceleration[1] < 6 * 9.8 * this.scale_factor[1])
                         b.linear_acceleration = b.linear_acceleration.plus(vec3(0, .1 * this.scale_factor[1], 0).times(dt / 1000));
                     b.linear_velocity = b.linear_velocity.plus(b.linear_acceleration.times(dt));
