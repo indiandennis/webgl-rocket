@@ -268,6 +268,15 @@ class Main_Scene extends Simulation {
         ];
         this.just_detached = false;
 
+        // TODO: CHECK IF ENGINES ARE FIRING
+        this.currently_firing = false;
+
+        // TODO: BOOSTER FUEL CAPACITY
+        this.fuel_cap1 = 30;
+        this.fuel_cap2 = 40;
+        this.fuel_cap3 = 40;
+        this.fuel_cap4 = 20;
+
     }
 
     make_control_panel() {                           // make_control_panel(): Create the buttons for using the viewer.
@@ -276,6 +285,7 @@ class Main_Scene extends Simulation {
 
     action() {
         if (!this.bodies[this.bottom_body].activated) {
+            this.currently_firing = true;
             let i = this.bottom_body;
             do {
                 this.bodies[i].activated = true;
@@ -285,6 +295,7 @@ class Main_Scene extends Simulation {
             } while (i > 3);
 
         } else {
+            this.currently_firing = false;
             this.just_detached = true;
             do {
                 this.bodies[this.bottom_body].attached = false;
@@ -419,6 +430,47 @@ class Main_Scene extends Simulation {
             }
         }
         this.just_detached = false;
+
+        if(this.currently_firing) {
+            switch(this.separation_count) {
+                case 0:
+                    if(this.fuel_cap1 > 0) {
+                        this.fuel_cap1 -= (dt / 10);
+                    }
+                    else {
+                        this.currently_firing = false;
+                        this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
+                    }
+                    break;
+                case 1:
+                    if(this.fuel_cap2 > 0) {
+                        this.fuel_cap2 -= (dt / 10);
+                    }
+                    else {
+                        this.currently_firing = false;
+                        this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
+                    }
+                    break;
+                case 2:
+                    if(this.fuel_cap3 > 0) {
+                        this.fuel_cap3 -= (dt / 10);
+                    }
+                    else {
+                        this.currently_firing = false;
+                        this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
+                    }
+                    break;
+                case 3:
+                    if(this.fuel_cap4 > 0) {
+                        this.fuel_cap4 -= (dt / 10);
+                    }
+                    else {
+                        this.currently_firing = false;
+                        this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
+                    }
+                    break;
+            }
+        }
     }
 
     check_collisions() {
@@ -441,8 +493,17 @@ class Main_Scene extends Simulation {
 
 
         //can move this stuff to the constructor if it doesn't change by t (but it probably will)
-        //TODO: SUNLIGHT
+        // TODO: SUNLIGHT
         program_state.lights = [new Light(vec4(100, 500, 250, 0), color(1, 1, 1, 1), 1000000)];
+
+        // TODO: BOOSTER LIGHTS
+        if(this.currently_firing) {
+            program_state.lights.push(new Light(vec4(
+                this.bodies[this.bottom_body].center[0],
+                this.bodies[this.bottom_body].center[1] - 4,
+                this.bodies[this.bottom_body].center[2],
+                1), color(1, 0.682, 0.259, 1), 100000));
+        }
 
         if (!context.scratchpad.controls) {
             this.children.push(context.scratchpad.controls = new Camera_Controls(() => program_state.camera_transform, (mat) => this.movement_transform = mat));
