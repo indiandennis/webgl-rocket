@@ -494,7 +494,7 @@ class Main_Scene extends Simulation {
 
         //can move this stuff to the constructor if it doesn't change by t (but it probably will)
         // TODO: SUNLIGHT
-        program_state.lights = [new Light(vec4(100, 500, 250, 0), color(1, 1, 1, 1), 100000)];
+        program_state.lights = [new Light(vec4(100, 500, 250, 0), color(1, 1, 1, 1), 500000)];
 
         // TODO: BOOSTER LIGHTS
         if(this.currently_firing) {
@@ -550,10 +550,10 @@ class Main_Scene extends Simulation {
 
         // Change color of space sphere
         this.sky_material.color = color(sky_color[0], sky_color[1], sky_color[2], sky_color[3]);
-        this.shapes["sky"].draw(context, program_state, Mat4.translation(0, -6309884, 0).times(Mat4.scale(7500000, 7500000, 7500000)), this.sky_material);
+        this.shapes["sky"].draw(context, program_state, Mat4.translation(0, -6309884, 0).times(Mat4.scale(8000000, 8000000, 8000000)), this.sky_material);
         //this.shapes["space"].draw(context, program_state, Mat4.translation(0, -6309884, 0).times(Mat4.scale(7600000, 7600000, 7600000)), this.space_material);
-        this.shapes["sun"].draw(context, program_state, Mat4.translation(100000, 1000000, 250000)
-                                                        .times(Mat4.scale(50000, 50000, 50000))
+        this.shapes["sun"].draw(context, program_state, Mat4.translation(100000, 1500000, 250000)
+                                                        .times(Mat4.scale(80000, 80000, 80000))
                                                         .times(Mat4.rotation(1.2, -0.8, 0, -0.2)), this.sun_material);
 
         //particle effects
