@@ -22,6 +22,7 @@ class Body {                                   // **Body** can store and update 
         this.temp_matrix = Mat4.identity();
         this.attached = attached;
         this.activated = activated;
+        this.ignore_collisions = false;
         return Object.assign(this, {
             linear_velocity,
             linear_acceleration,
@@ -31,18 +32,36 @@ class Body {                                   // **Body** can store and update 
         })
     }
 
-    check_collision(b_hitbox, b_center) //each has a (x,y,z)
+    check_collision(b_hitbox, b_drawn_location) //each has a (x,y,z)
     {
-        let adj_hitbox_a = [this.hitbox[0].plus(this.center), this.hitbox[1].plus(this.center)];
-        let adj_hitbox_b = [b_hitbox[0].plus(b_center), b_hitbox[1].plus(b_center)];
+        let a_AABB = this.calculate_AABB(this.hitbox, this.drawn_location);
+        let b_AABB = this.calculate_AABB(b_hitbox, b_drawn_location);
 
-        if (adj_hitbox_b === adj_hitbox_a)
+        if (a_AABB === b_AABB)
             return 0;
-        else if ((adj_hitbox_a[0][0] <= adj_hitbox_b[1][0] && adj_hitbox_a[1][0] >= adj_hitbox_b[0][0]) &&
-            (adj_hitbox_a[0][1] <= adj_hitbox_b[1][1] && adj_hitbox_a[1][1] >= adj_hitbox_b[0][1]) &&
-            (adj_hitbox_a[0][2] <= adj_hitbox_b[1][2] && adj_hitbox_a[1][2] >= adj_hitbox_b[0][2]))
+        else if ((a_AABB[0][0] <= b_AABB[1][0] && a_AABB[1][0] >= b_AABB[0][0]) &&
+            (a_AABB[0][1] <= b_AABB[1][1] && a_AABB[1][1] >= b_AABB[0][1]) &&
+            (a_AABB[0][2] <= b_AABB[1][2] && a_AABB[1][2] >= b_AABB[0][2])) {
             return 1;
+        }
+
         return 0;
+    }
+
+    calculate_AABB(hitbox, drawn_location) {
+        let transformed_hitbox = hitbox.map(x => drawn_location.times(x));
+        let AABB = [vec4(...transformed_hitbox[0]), vec4(...transformed_hitbox[0])];
+
+        for (let i = 1; i < transformed_hitbox.length; i++) {
+            for (let j = 0; j < 3; j++) {
+                if (transformed_hitbox[i][j] < AABB[0][j])
+                    AABB[0][j] = transformed_hitbox[i][j];
+                else if (transformed_hitbox[i][j] > AABB[1][j]) {
+                    AABB[1][j] = transformed_hitbox[i][j];
+                }
+            }
+        }
+        return AABB;
     }
 
     advance(time_amount) {                           // advance(): Perform an integration (the simplistic Forward Euler method) to
