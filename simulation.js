@@ -23,6 +23,7 @@ class Simulation extends Scene {                                         // **Si
         // Avoid the spiral of death; limit the amount of time we will spend
         // computing during this timestep if display lags:
         this.time_accumulator += Math.min(frame_time, 0.1);
+        //this.time_accumulator += frame_time;
         // Repeatedly step the simulation until we're caught up with this frame:
         while (Math.abs(this.time_accumulator) >= this.dt) {                                                       // Single step of the simulation for all bodies:
             this.update_state(this.dt);

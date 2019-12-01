@@ -738,6 +738,8 @@ const Vertex_Buffer = tiny.Vertex_Buffer =
 
             const gl = context;
 
+            if (!gl) return;
+
             const write = did_exist ? (target, data) => gl.bufferSubData(target, 0, data)
                 : (target, data) => gl.bufferData(target, data, gl.STATIC_DRAW);
 

@@ -79,6 +79,12 @@ class Main_Scene extends Simulation {
             "payload-fairing-half": new defs.Shape_From_File("assets/objects/payload-fairing-half.obj"),
             "cloud-1": new defs.Shape_From_File("assets/objects/cloud1.obj"),
 
+            "platform": new defs.Shape_From_File("assets/objects/platform.obj"),
+            "elevator": new defs.Shape_From_File("assets/objects/elevator.obj"),
+            "tower": new defs.Shape_From_File("assets/objects/tower.obj"),
+            "payload_bridge": new defs.Shape_From_File("assets/objects/payload_bridge.obj"),
+            "stable_bridge": new defs.Shape_From_File("assets/objects/stable_bridgeX2.obj"),
+
             // TODO: OBJECTS
             "sky": new defs.Internal_Subdivision_Sphere(4),
             "space": new defs.Internal_Subdivision_Sphere(4),
@@ -87,10 +93,10 @@ class Main_Scene extends Simulation {
         };
 
         this.emitters = {
-            "booster": new defs.Particle_Emitter(10000),
-            "stage-2": new defs.Particle_Emitter(10000),
-            "stage-3": new defs.Particle_Emitter(10000),
-            "stage-4": new defs.Particle_Emitter(10000),
+            "booster": new defs.Particle_Emitter(5000),
+            "stage-2": new defs.Particle_Emitter(5000),
+            "stage-3": new defs.Particle_Emitter(5000),
+            "stage-4": new defs.Particle_Emitter(5000),
         };
 
         this.booster_smoke_material = new Material(new defs.Particle_Shader(.5), {
@@ -244,6 +250,27 @@ class Main_Scene extends Simulation {
                 this.scale_factor,
                 [vec3(-1.5, -1, -1.5), vec3(1.5, 24, 1.5)]
             ).emplace(Mat4.translation(-4.5 / 2, 0, -Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(5 * Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
+            new Body(
+                [this.shapes["platform"]],
+                [Mat4.translation(0, 0, 0)],
+                [this.rocket_material],
+                this.scale_factor,
+                [vec3(0, 0, 0), vec3(0, 0, 0)]
+            ).emplace(Mat4.translation(0, -7, 0), vec3(0, 0, 0), 0, false),
+            new Body(
+                [this.shapes["tower"]],
+                [Mat4.translation(0, 0, 0)],
+                [this.rocket_material],
+                this.scale_factor,
+                [vec3(0, 0, 0), vec3(0, 0, 0)]
+            ).emplace(Mat4.translation(0, -2, 0), vec3(0, 0, 0), 0, false),
+            new Body(
+                [this.shapes["elevator"]],
+                [Mat4.translation(0, 0, 0)],
+                [this.rocket_material],
+                this.scale_factor,
+                [vec3(0, 0, 0), vec3(0, 0, 0)]
+            ).emplace(Mat4.translation(-18, -2, 0), vec3(0, 0, 0), 0, false),
         ];
         console.log(this.bodies);
 
@@ -267,16 +294,34 @@ class Main_Scene extends Simulation {
             5 * Math.PI / 3,
         ];
         this.just_detached = false;
+        this.just_activated = false;
+
+        this.bridge_scale = Mat4.identity();
 
     }
 
     make_control_panel() {                           // make_control_panel(): Create the buttons for using the viewer.
         this.key_triggered_button("Action", ["b"], () => this.action());
+        this.key_triggered_button("Speed up time", ["Shift", "T"], () => this.time_scale *= 5);
+        this.key_triggered_button("Slow down time", ["t"], () => this.time_scale /= 5);
+        this.new_line();
+        this.live_string(box => {
+            box.textContent = "Time scale: " + this.time_scale
+        });
+        this.new_line();
+        this.live_string(box => {
+            box.textContent = "Fixed simulation time step size: " + this.dt
+        });
+        this.new_line();
+        this.live_string(box => {
+            box.textContent = this.steps_taken + " timesteps were taken so far."
+        });
     }
 
     action() {
         if (!this.bodies[this.bottom_body].activated) {
             let i = this.bottom_body;
+            this.just_activated = true;
             do {
                 this.bodies[i].activated = true;
                 this.bodies[i].shapes[this.bodies[i].shapes.length - 1].enable();
@@ -305,6 +350,9 @@ class Main_Scene extends Simulation {
         for (let [i, b] of this.bodies.entries()) {
             if (i === 0) {
                 if (this.bodies[this.bottom_body].activated) {
+                    if (this.just_activated) {
+                        //b.linear_acceleration = b.linear_acceleration.plus(vec3(0, 1, 0));
+                    }
                     if (b.linear_acceleration[1] < 6 * 9.8 * this.scale_factor[1])
                         b.linear_acceleration = b.linear_acceleration.plus(vec3(0, .1 * this.scale_factor[1], 0).times(dt / 1000));
                     b.linear_velocity = b.linear_velocity.plus(b.linear_acceleration.times(dt));
@@ -332,48 +380,48 @@ class Main_Scene extends Simulation {
                     b.linear_velocity = vec3(0, 0, 0);
                 } else {
                     b.linear_acceleration = vec3(0, 0, 0);
-                    //b.linear_velocity = b.linear_velocity.plus(vec3(0, -9.8 * this.scale_factor[0], 0).times(dt / 1000));
+                    b.linear_velocity = b.linear_velocity.plus(vec3(0, -9.8, 0).times(dt / 1000));
                     b.angular_acceleration = 0;
 
                     // TODO: ANIMATE DRIFTING OF DEBRIS
-                    if(this.just_detached) {
-                        switch(i) {
+                    if (this.just_detached) {
+                        switch (i) {
                             case 1:
-                                b.linear_velocity = b.linear_velocity.plus(vec3(-500, -9.8 * this.scale_factor[0], 500).times(dt / 1000));
+                                b.linear_velocity = b.linear_velocity.plus(vec3(-500, -9.8, 500).times(dt / 1000));
                                 break;
                             case 2:
-                                b.linear_velocity = b.linear_velocity.plus(vec3(-950, -9.8 * this.scale_factor[0], 300).times(dt / 1000));
+                                b.linear_velocity = b.linear_velocity.plus(vec3(-950, -9.8, 300).times(dt / 1000));
                                 break;
                             case 3:
-                                b.linear_velocity = b.linear_velocity.plus(vec3(500, -9.8 * this.scale_factor[0], 750).times(dt / 1000));
+                                b.linear_velocity = b.linear_velocity.plus(vec3(500, -9.8, 750).times(dt / 1000));
                                 break;
                             case 4:
-                                b.linear_velocity = b.linear_velocity.plus(vec3(-1000, -9.8 * this.scale_factor[0], 0).times(dt / 1000));
+                                b.linear_velocity = b.linear_velocity.plus(vec3(-1000, -9.8, 0).times(dt / 1000));
                                 break;
                             case 5:
-                                b.linear_velocity = b.linear_velocity.plus(vec3(1000, -9.8 * this.scale_factor[0], 0).times(dt / 1000));
+                                b.linear_velocity = b.linear_velocity.plus(vec3(1000, -9.8, 0).times(dt / 1000));
                                 break;
                             case 6:
-                                b.linear_velocity = b.linear_velocity.plus(vec3(500, -9.8 * this.scale_factor[0], (Math.sqrt(3) / 2) * 1000).times(dt / 1000));
+                                b.linear_velocity = b.linear_velocity.plus(vec3(500, -9.8, (Math.sqrt(3) / 2) * 1000).times(dt / 1000));
                                 break;
                             case 7:
-                                b.linear_velocity = b.linear_velocity.plus(vec3(-500, -9.8 * this.scale_factor[0], (Math.sqrt(3) / 2) * 1000).times(dt / 1000));
+                                b.linear_velocity = b.linear_velocity.plus(vec3(-500, -9.8, (Math.sqrt(3) / 2) * 1000).times(dt / 1000));
                                 break;
                             case 8:
-                                b.linear_velocity = b.linear_velocity.plus(vec3(500, -9.8 * this.scale_factor[0], -(Math.sqrt(3) / 2) * 1000).times(dt / 1000));
+                                b.linear_velocity = b.linear_velocity.plus(vec3(500, -9.8, -(Math.sqrt(3) / 2) * 1000).times(dt / 1000));
                                 break;
                             case 9:
-                                b.linear_velocity = b.linear_velocity.plus(vec3(-500, -9.8 * this.scale_factor[0], -(Math.sqrt(3) / 2) * 1000).times(dt / 1000));
+                                b.linear_velocity = b.linear_velocity.plus(vec3(-500, -9.8, -(Math.sqrt(3) / 2) * 1000).times(dt / 1000));
                                 break;
                             default:
-                                b.linear_velocity = b.linear_velocity.plus(vec3(0, -9.8 * this.scale_factor[0], 0).times(dt / 1000));
+                                b.linear_velocity = b.linear_velocity.plus(vec3(0, -9.8, 0).times(dt / 1000));
                         }
                     }
 
 
                     // TODO: ANIMATE ROTATION OF DEBRIS
-                    if(this.separation_count === 1 && i > 3 && i < 10) {
-                        switch(this.booster_angles[this.booster_count]) {
+                    if (this.separation_count === 1 && i > 3 && i < 10) {
+                        switch (this.booster_angles[this.booster_count]) {
                             case 0:
                                 b.spin_axis = vec3(0, 0, 1);
                                 break;
@@ -393,22 +441,18 @@ class Main_Scene extends Simulation {
                                 b.spin_axis = vec3(-Math.sqrt(3) / 2, 0, 1 / 2);
                                 break;
                         }
-                        b.angular_velocity = 0.1;
+                        b.angular_velocity = 0.02;
                         this.booster_count += 1;
-                    }
-                    else if(this.separation_count === 2 && i === 3) {
+                    } else if (this.separation_count === 2 && i === 3) {
                         b.spin_axis = vec3(0.5, 0, -0.75);
                         b.angular_velocity = 0.01;
-                    }
-                    else if(this.separation_count === 3 && i === 2) {
+                    } else if (this.separation_count === 3 && i === 2) {
                         b.spin_axis = vec3(-0.95, 0, 0.30);
                         b.angular_velocity = 0.01;
-                    }
-                    else if(this.separation_count === 4 && i === 1) {
+                    } else if (this.separation_count === 4 && i === 1) {
                         b.spin_axis = vec3(0.5, 0, 0.5);
                         b.angular_velocity = 0.01;
-                    }
-                    else {
+                    } else {
                         b.angular_velocity += b.angular_acceleration * dt;
                     }
 
@@ -419,6 +463,7 @@ class Main_Scene extends Simulation {
             }
         }
         this.just_detached = false;
+        this.just_activated = false;
     }
 
     check_collisions() {
@@ -442,7 +487,7 @@ class Main_Scene extends Simulation {
 
         //can move this stuff to the constructor if it doesn't change by t (but it probably will)
         //TODO: SUNLIGHT
-        program_state.lights = [new Light(vec4(100, 500, 250, 0), color(1, 1, 1, 1), 1000000)];
+        program_state.lights = [new Light(vec4(100, 50, 100, 0), color(1, 1, 1, 1), 100000)];
 
         if (!context.scratchpad.controls) {
             this.children.push(context.scratchpad.controls = new Camera_Controls(() => program_state.camera_transform, (mat) => this.movement_transform = mat));
@@ -459,14 +504,20 @@ class Main_Scene extends Simulation {
         let camera = Mat4.scale(this.scale_factor[0], this.scale_factor[1], this.scale_factor[2])
             .times(Mat4.translation(this.bodies[0].center[0], this.bodies[0].center[1], this.bodies[0].center[2])).times(this.movement_transform).times(this.camera_offset);
         program_state.set_camera(camera);
-        const t = program_state.animation_time, dt = program_state.animation_delta_time;
+        const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
 
 
         //draw non physically animated shapes here
         let model_transform = Mat4.identity();
         this.shapes["cloud-1"].draw(context, program_state, Mat4.translation(100, 10000, 0), this.cloud);
         //this.shapes["sphere"].draw(context, program_state, Mat4.translation(0, -63100, 0).times(Mat4.scale(63100, 63100, 63100)), this.cloud);
-        this.shapes["sphere"].draw(context, program_state, Mat4.translation(0, -6309884, 0).times(Mat4.scale(6310000, 6310000, 6310000)).times(Mat4.rotation(Math.PI / 2, 1, .5, 1)), this.earth_material);
+        this.shapes["sphere"].draw(context, program_state, Mat4.translation(0, -6309886, 0).times(Mat4.scale(6310000, 6310000, 6310000)).times(Mat4.rotation(Math.PI / 2, 1, .5, 1)), this.earth_material);
+
+        if (this.bodies[this.bottom_body].activated && this.bodies[0].center[1] < 100) {
+            this.bridge_scale = Mat4.scale(Math.max(1 - .2 * t, 0), 1, 1)
+        }
+        this.shapes["payload_bridge"].draw(context, program_state, Mat4.translation(-22, 65, 0).times(this.bridge_scale), this.rocket_material);
+        this.shapes["stable_bridge"].draw(context, program_state, Mat4.translation(-22, 40, 0).times(this.bridge_scale), this.rocket_material);
 
         // TODO: DRAW SKY, SPACE, AND SUN
         // Color endpoints of the linear interpolation
@@ -489,7 +540,7 @@ class Main_Scene extends Simulation {
 
         // Change color of space sphere
         this.sky_material.color = color(sky_color[0], sky_color[1], sky_color[2], sky_color[3]);
-        this.shapes["sky"].draw(context, program_state, Mat4.translation(0, -6309884, 0).times(Mat4.scale(7500000, 7500000, 7500000)), this.sky_material);
+        this.shapes["sky"].draw(context, program_state, Mat4.translation(0, -6309884, 0).times(Mat4.scale(8000000, 8000000, 8000000)), this.sky_material);
         //this.shapes["space"].draw(context, program_state, Mat4.translation(0, -6309884, 0).times(Mat4.scale(7600000, 7600000, 7600000)), this.space_material);
         this.shapes["sun"].draw(context, program_state, Mat4.translation(100000, 500000, 250000)
                                                         .times(Mat4.scale(50000, 50000, 50000))

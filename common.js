@@ -1271,13 +1271,13 @@ const Particle_Shader = defs.Particle_Shader =
                   vLifetime = clamp(vLifetime, 0.0, 1.0);
                   float size =  initial_size + time * 2.0;
                   
-                  vec4 startPos = model_transform[3];
-                  if(startPos.y + position.y <= 6.0) {
-                    position.y = 6.0 + gold_noise(vec2(center_offset.x, center_offset.y), animation_time + 1.1) - startPos.y;
-                    position.x += velocity.x * 100.0;
-                    position.z += velocity.z * 100.0;
+                  //vec4 startPos = model_transform[3];
+                  //if(startPos.y + position.y <= 6.0) {
+                  //  position.y = 6.0 + gold_noise(vec2(center_offset.x, center_offset.y), animation_time + 1.1) - startPos.y;
+                  // position.x += velocity.x * 100.0;
+                  // position.z += velocity.z * 100.0;
                     //size +=  gold_noise(vec2(center_offset.x, center_offset.y), animation_time + 3.2) * 1.0;
-                  }
+                  //}
                   
                 
                   vec3 cameraRight = vec3(camera_matrix[0].x, camera_matrix[1].x, camera_matrix[2].x);
@@ -1464,7 +1464,8 @@ const Particle_Emitter = defs.Particle_Emitter =
         }
 
         enable() {
-
+            //this.prev_time = new Date().getTime();
+            //this.time = this.prev_time;
             this.enabled = true;
 
         }
@@ -1515,5 +1516,182 @@ const Particle_Emitter = defs.Particle_Emitter =
                 // Run the shaders to draw every triangle now:
                 this.execute_shaders(webgl_manager.context, gpu_instance);
             }
+        }
+    };
+
+const Billboard_Shader = defs.Billboard_Shader =
+    class Billboard_Shader extends Shader {                           // **Shader** loads a GLSL shader program onto your graphics card, starting from a JavaScript string.
+        // To use it, make subclasses of Shader that define these strings of GLSL code.  The base class will
+        // command the GPU to recieve, compile, and run these programs.  In WebGL 1, the shader runs once per
+        // every shape that is drawn onscreen.
+
+        // Extend the class and fill in the abstract functions, some of which define GLSL strings, and others
+        // (update_GPU) which define the extra custom JavaScript code needed to populate your particular shader
+        // program with all the data values it is expecting, such as matrices.  The shader pulls these values
+        // from two places in your JavaScript:  A Material object, for values pertaining to the current shape
+        // only, and a Program_State object, for values pertaining to your entire Scene or program.
+
+        constructor() {
+            super();
+        }
+
+        // Your custom Shader has to override the following functions:
+        shared_glsl_code() {
+            return `
+                precision mediump float;
+                varying vec2 f_tex_coord;
+            `
+        }
+
+        vertex_glsl_code() {
+            return this.shared_glsl_code() + `
+                attribute vec2 texture_coord;
+                attribute vec2 tri_corner;
+                
+                uniform mat4 model_transform;
+                uniform mat4 projection_camera_model_transform;
+                uniform mat4 camera_matrix;
+                                
+                
+                void main() {                
+                  vec3 cameraRight = vec3(camera_matrix[0].x, camera_matrix[1].x, camera_matrix[2].x);
+                  vec3 cameraUp = vec3(camera_matrix[0].y, camera_matrix[1].y, camera_matrix[2].y);
+                
+                  vec4 position = vec4((cameraRight * tri_corner.x) + (cameraUp * tri_corner.y), 1.0);
+                  gl_Position = projection_camera_model_transform * position;
+           
+                  f_tex_coord = texture_coord;
+                }
+            `
+        }
+
+        fragment_glsl_code() {
+            return this.shared_glsl_code() + `
+                uniform vec4 shape_color;
+                uniform sampler2D texture;
+                
+                void main (void) {
+                    vec4 tex_color = texture2D( texture, f_tex_coord );
+                    if( tex_color.w < .01 ) discard;
+                        // Compute color:
+                    gl_FragColor = vec4( tex_color.xyz + shape_color.xyz , shape_color.w * tex_color.w ); 
+                }
+            `
+        }
+
+        send_gpu_state(gl, gpu, gpu_state, model_transform) {                                       // send_gpu_state():  Send the state of our whole drawing context to the GPU.
+            const O = vec4(0, 0, 0, 1), camera_center = gpu_state.camera_transform.times(O).to3();
+            gl.uniform3fv(gpu.camera_center, camera_center);
+            // Use the squared scale trick from "Eric's blog" instead of inverse transpose matrix:
+            const squared_scale = model_transform.reduce(
+                (acc, r) => {
+                    return acc.plus(vec4(...r).times_pairwise(r))
+                }, vec4(0, 0, 0, 0)).to3();
+            gl.uniform3fv(gpu.squared_scale, squared_scale);
+            // Send the current matrices to the shader.  Go ahead and pre-compute
+            // the products we'll need of the of the three special matrices and just
+            // cache and send those.  They will be the same throughout this draw
+            // call, and thus across each instance of the vertex shader.
+            // Transpose them since the GPU expects matrices as column-major arrays.
+            const PCM = gpu_state.projection_transform.times(gpu_state.camera_inverse).times(model_transform);
+            gl.uniformMatrix4fv(gpu.model_transform, false, Matrix.flatten_2D_to_1D(model_transform.transposed()));
+            gl.uniformMatrix4fv(gpu.projection_camera_model_transform, false, Matrix.flatten_2D_to_1D(PCM.transposed()));
+            gl.uniformMatrix4fv(gpu.camera_matrix, false, Matrix.flatten_2D_to_1D(gpu_state.camera_inverse.transposed()));
+
+            gl.uniform1f(gpu.animation_time, gpu_state.animation_time / 1000);
+
+
+            // Omitting lights will show only the material color, scaled by the ambient term:
+            //if (!gpu_state.lights.length)
+            //   return;
+
+            //const light_positions_flattened = [], light_colors_flattened = [];
+            //for (var i = 0; i < 4 * gpu_state.lights.length; i++) {
+            //    light_positions_flattened.push(gpu_state.lights[Math.floor(i / 4)].position[i % 4]);
+            //    light_colors_flattened.push(gpu_state.lights[Math.floor(i / 4)].color[i % 4]);
+            //}
+            //gl.uniform4fv(gpu.light_positions_or_vectors, light_positions_flattened);
+        }
+
+        update_GPU(context, gpu_addresses, gpu_state, model_transform, material) {
+            const defaults = {};
+            //texture  = Object.assign({}, defaults, material);
+
+            if (material && material.texture.ready) {                         // Select texture unit 0 for the fragment shader Sampler2D uniform called "texture":
+                context.uniform4fv(gpu_addresses.shape_color, material.color);
+                context.uniform1i(gpu_addresses.texture, 0);
+
+                // For this draw, use the texture image from correct the GPU buffer:
+                material.texture.activate(context);
+            }
+
+            this.send_gpu_state(context, gpu_addresses, gpu_state, model_transform);
+        }
+
+    };
+
+const Billboard_Quad = defs.Billboard_Quad =
+    class Billboard_Quad extends tiny.Graphics_Card_Object {
+        constructor() {
+            super();
+            this.arrays = {};
+            this.arrays.tri_corner = [
+                -1.0, -1.0,
+                1.0, -1.0,
+                1.0, 1.0,
+                -1.0, 1.0];
+            this.arrays.texture_coord = [
+                0, 0,
+                1, 0,
+                1, 1,
+                0, 1];
+            this.indices = [0, 1, 2, 0, 2, 3];
+        }
+
+        copy_onto_graphics_card(context, selection_of_arrays = Object.keys(this.arrays), write_to_indices = true) {
+            // Define what this object should store in each new WebGL Context:
+            const initial_gpu_representation = {webGL_buffer_pointers: {}};
+            // Our object might need to register to multiple GPU contexts in the case of
+            // multiple drawing areas.  If this is a new GPU context for this object,
+            // copy the object to the GPU.  Otherwise, this object already has been
+            // copied over, so get a pointer to the existing instance.
+            const did_exist = this.gpu_instances.get(context);
+            const gpu_instance = super.copy_onto_graphics_card(context, initial_gpu_representation);
+
+            const gl = context;
+
+            const write = did_exist ? (target, data) => gl.bufferSubData(target, 0, data)
+                : (target, data) => gl.bufferData(target, data, gl.STATIC_DRAW);
+
+
+            for (let name of selection_of_arrays) {
+                if (!did_exist)
+                    gpu_instance.webGL_buffer_pointers[name] = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, gpu_instance.webGL_buffer_pointers[name]);
+                write(gl.ARRAY_BUFFER, new Float32Array(this.arrays[name]));
+            }
+
+            if (!did_exist)
+                gpu_instance.index_buffer = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gpu_instance.index_buffer);
+            write(gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(this.indices));
+            return gpu_instance;
+        }
+
+        execute_shaders(gl, gpu_instance)     // execute_shaders(): Draws this shape's entire vertex buffer.
+        {
+            //gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gpu_instance.index_buffer);
+            gl.drawElements(gl.TRIANGLES, this.indices.length, gl.UNSIGNED_INT, 0)
+        }
+
+        draw(webgl_manager, program_state, model_transform, material) {                                       // draw():  To appear onscreen, a shape of any variety goes through this function,
+            // which executes the shader programs.  The shaders draw the right shape due to
+            // pre-selecting the correct buffer region in the GPU that holds that shape's data.
+
+            const gpu_instance = this.activate(webgl_manager.context);
+            material.shader.activate(webgl_manager.context, gpu_instance.webGL_buffer_pointers, program_state, model_transform, material);
+            // Run the shaders to draw every triangle now:
+            this.execute_shaders(webgl_manager.context, gpu_instance);
         }
     };
