@@ -571,7 +571,7 @@ class Main_Scene extends Simulation {
                         this.explosions.push({
                             "shape": new defs.Billboard_Quad(),
                             "mat": Mat4.translation(this.bodies[j].center[0], this.bodies[j].center[1] + this.bodies[j].hitbox[4][1] / 2, this.bodies[j].center[2])
-                                .times(Mat4.scale(this.bodies[j].hitbox[4][1], this.bodies[j].hitbox[4][1], this.bodies[j].hitbox[4][1]))
+                                .times(Mat4.scale(this.bodies[j].hitbox[4][1] + 10, this.bodies[j].hitbox[4][1] + 10, this.bodies[j].hitbox[4][1] + 10))
                         });
                         //derender shapes
                         b.enabled = false;
