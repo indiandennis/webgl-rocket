@@ -171,6 +171,7 @@ class Main_Scene extends Simulation {
         this.sun_material = new Material(new defs.Textured_Phong(), {
             color: color(0, 0, 0, 1),
             ambient: 1,
+            diffusivity: 0,
             texture: this.textures.sun,
         });
 
@@ -298,6 +299,15 @@ class Main_Scene extends Simulation {
 
         this.bridge_scale = Mat4.identity();
 
+        // TODO: CHECK IF ENGINES ARE FIRING
+        this.currently_firing = false;
+
+        // TODO: BOOSTER FUEL CAPACITY
+        this.fuel_cap1 = 30;
+        this.fuel_cap2 = 40;
+        this.fuel_cap3 = 40;
+        this.fuel_cap4 = 20;
+
     }
 
     make_control_panel() {                           // make_control_panel(): Create the buttons for using the viewer.
@@ -320,6 +330,7 @@ class Main_Scene extends Simulation {
 
     action() {
         if (!this.bodies[this.bottom_body].activated) {
+            this.currently_firing = true;
             let i = this.bottom_body;
             this.just_activated = true;
             do {
@@ -330,6 +341,7 @@ class Main_Scene extends Simulation {
             } while (i > 3);
 
         } else {
+            this.currently_firing = false;
             this.just_detached = true;
             do {
                 this.bodies[this.bottom_body].attached = false;
@@ -349,7 +361,7 @@ class Main_Scene extends Simulation {
         //TODO: update this to handle checking boosters, collisions, accelerations, and stuff
         for (let [i, b] of this.bodies.entries()) {
             if (i === 0) {
-                if (this.bodies[this.bottom_body].activated) {
+                if (this.bodies[this.bottom_body].activated && this.currently_firing) {
                     if (this.just_activated) {
                         //b.linear_acceleration = b.linear_acceleration.plus(vec3(0, 1, 0));
                     }
@@ -464,6 +476,47 @@ class Main_Scene extends Simulation {
         }
         this.just_detached = false;
         this.just_activated = false;
+
+        if(this.currently_firing) {
+            switch(this.separation_count) {
+                case 0:
+                    if(this.fuel_cap1 > 0) {
+                        this.fuel_cap1 -= (dt / 10);
+                    }
+                    else {
+                        this.currently_firing = false;
+                        this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
+                    }
+                    break;
+                case 1:
+                    if(this.fuel_cap2 > 0) {
+                        this.fuel_cap2 -= (dt / 10);
+                    }
+                    else {
+                        this.currently_firing = false;
+                        this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
+                    }
+                    break;
+                case 2:
+                    if(this.fuel_cap3 > 0) {
+                        this.fuel_cap3 -= (dt / 10);
+                    }
+                    else {
+                        this.currently_firing = false;
+                        this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
+                    }
+                    break;
+                case 3:
+                    if(this.fuel_cap4 > 0) {
+                        this.fuel_cap4 -= (dt / 10);
+                    }
+                    else {
+                        this.currently_firing = false;
+                        this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
+                    }
+                    break;
+            }
+        }
     }
 
     check_collisions() {
@@ -486,8 +539,17 @@ class Main_Scene extends Simulation {
 
 
         //can move this stuff to the constructor if it doesn't change by t (but it probably will)
-        //TODO: SUNLIGHT
-        program_state.lights = [new Light(vec4(100, 50, 100, 0), color(1, 1, 1, 1), 100000)];
+        // TODO: SUNLIGHT
+        program_state.lights = [new Light(vec4(100, 500, 250, 0), color(1, 1, 1, 1), 1000000)];
+
+        // TODO: BOOSTER LIGHTS
+        if(this.currently_firing) {
+            program_state.lights.push(new Light(vec4(
+                this.bodies[this.bottom_body].center[0],
+                this.bodies[this.bottom_body].center[1] - 4,
+                this.bodies[this.bottom_body].center[2],
+                1), color(1, 0.682, 0.259, 1), 100000));
+        }
 
         if (!context.scratchpad.controls) {
             this.children.push(context.scratchpad.controls = new Camera_Controls(() => program_state.camera_transform, (mat) => this.movement_transform = mat));
@@ -542,9 +604,9 @@ class Main_Scene extends Simulation {
         this.sky_material.color = color(sky_color[0], sky_color[1], sky_color[2], sky_color[3]);
         this.shapes["sky"].draw(context, program_state, Mat4.translation(0, -6309884, 0).times(Mat4.scale(8000000, 8000000, 8000000)), this.sky_material);
         //this.shapes["space"].draw(context, program_state, Mat4.translation(0, -6309884, 0).times(Mat4.scale(7600000, 7600000, 7600000)), this.space_material);
-        this.shapes["sun"].draw(context, program_state, Mat4.translation(100000, 500000, 250000)
-                                                        .times(Mat4.scale(50000, 50000, 50000))
-                                                        .times(Mat4.rotation(0.9, -0.5, 0, -0.2)), this.sun_material);
+        this.shapes["sun"].draw(context, program_state, Mat4.translation(100000, 1500000, 250000)
+                                                        .times(Mat4.scale(85000, 85000, 85000))
+                                                        .times(Mat4.rotation(1.2, -0.8, 0, -0.2)), this.sun_material);
 
         //particle effects
         //this.smoke_emitter.draw(context, program_state, Mat4.translation(20, 50, 0), this.smoke_material);
