@@ -62,7 +62,7 @@ class Main_Scene extends Simulation {
             space: new Texture("assets/textures/space.png", "LINEAR_MIPMAP_LINEAR"),
             sun: new Texture("assets/textures/sun-from-earth.png"),
             smoke: new Texture("assets/textures/sphere.png", "LINEAR"),
-            explosion_atlas: new Texture("assets/textures/explosion-atlas.png", "LINEAR"),
+            explosion_atlas: new Texture("assets/textures/explosion_atlas.png", "LINEAR"),
         };
 
         this.shapes = {
@@ -492,40 +492,36 @@ class Main_Scene extends Simulation {
         this.just_detached = false;
         this.just_activated = false;
 
-        if(this.currently_firing) {
-            switch(this.separation_count) {
+        if (this.currently_firing) {
+            switch (this.separation_count) {
                 case 0:
-                    if(this.fuel_cap1 > 0) {
+                    if (this.fuel_cap1 > 0) {
                         this.fuel_cap1 -= (dt / 10);
-                    }
-                    else {
+                    } else {
                         this.currently_firing = false;
                         this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
                     }
                     break;
                 case 1:
-                    if(this.fuel_cap2 > 0) {
+                    if (this.fuel_cap2 > 0) {
                         this.fuel_cap2 -= (dt / 10);
-                    }
-                    else {
+                    } else {
                         this.currently_firing = false;
                         this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
                     }
                     break;
                 case 2:
-                    if(this.fuel_cap3 > 0) {
+                    if (this.fuel_cap3 > 0) {
                         this.fuel_cap3 -= (dt / 10);
-                    }
-                    else {
+                    } else {
                         this.currently_firing = false;
                         this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
                     }
                     break;
                 case 3:
-                    if(this.fuel_cap4 > 0) {
+                    if (this.fuel_cap4 > 0) {
                         this.fuel_cap4 -= (dt / 10);
-                    }
-                    else {
+                    } else {
                         this.currently_firing = false;
                         this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
                     }
@@ -567,12 +563,18 @@ class Main_Scene extends Simulation {
         program_state.lights = [new Light(vec4(100, 500, 250, 0), color(1, 1, 1, 1), 1000000)];
 
         // TODO: BOOSTER LIGHTS
-        if(this.currently_firing) {
-            program_state.lights.push(new Light(vec4(
+        if (this.currently_firing) {
+            program_state.lights[1] = (new Light(vec4(
                 this.bodies[this.bottom_body].center[0],
                 this.bodies[this.bottom_body].center[1] - 4,
                 this.bodies[this.bottom_body].center[2],
-                1), color(1, 0.682, 0.259, 1), 100000));
+                1), color(1, 0.682, 0.259, 1), 10000));
+        } else {
+            program_state.lights[1] = (new Light(vec4(
+                this.bodies[this.bottom_body].center[0],
+                this.bodies[this.bottom_body].center[1] - 4,
+                this.bodies[this.bottom_body].center[2],
+                1), color(1, 0.682, 0.259, 1), 0));
         }
 
         if (!context.scratchpad.controls) {
@@ -634,7 +636,7 @@ class Main_Scene extends Simulation {
         //particle effects
         //this.smoke_emitter.draw(context, program_state, Mat4.translation(20, 50, 0), this.smoke_material);
 
-        this.shapes["explosion"].draw(context, program_state, Mat4.translation(100, 50, 0), this.explosion_material);
+        this.shapes["explosion"].draw(context, program_state, Mat4.translation(50, 50, 0).times(Mat4.scale(20, 20, 20)), this.explosion_material);
     }
 }
 

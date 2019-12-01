@@ -1540,6 +1540,7 @@ const Billboard_Shader = defs.Billboard_Shader =
             return `
                 precision mediump float;
                 varying vec2 f_tex_coord;
+                uniform float animation_time;
             `
         }
 
@@ -1571,8 +1572,19 @@ const Billboard_Shader = defs.Billboard_Shader =
                 uniform sampler2D texture;
                 
                 void main (void) {
-                    vec4 tex_color = texture2D( texture, f_tex_coord );
-                    if( tex_color.w < .01 ) discard;
+                      float percentOfLife = clamp(mod(animation_time, 1.0), 0.0, 1.0);
+                      float offset = floor(15.0 * percentOfLife);
+                      float offsetX = floor(mod(offset, 5.0)) / 5.0;
+                      float offsetY = 0.8 - floor(offset / 5.0) / 5.0;
+                    
+                      vec4 tex_color = texture2D(
+                        texture, 
+                        vec2(
+                          (f_tex_coord.x / 5.0) + offsetX,
+                          (f_tex_coord.y / 5.0) + offsetY
+                      ));
+                    
+                    //if( tex_color.w < .01 ) discard;
                         // Compute color:
                     gl_FragColor = vec4( tex_color.xyz + shape_color.xyz , shape_color.w * tex_color.w ); 
                 }
