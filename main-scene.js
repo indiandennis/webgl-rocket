@@ -442,7 +442,7 @@ class Main_Scene extends Simulation {
 
         //can move this stuff to the constructor if it doesn't change by t (but it probably will)
         //TODO: SUNLIGHT
-        program_state.lights = [new Light(vec4(100, 50, 100, 0), color(1, 1, 1, 1), 100000)];
+        program_state.lights = [new Light(vec4(100, 500, 250, 0), color(1, 1, 1, 1), 1000000)];
 
         if (!context.scratchpad.controls) {
             this.children.push(context.scratchpad.controls = new Camera_Controls(() => program_state.camera_transform, (mat) => this.movement_transform = mat));
@@ -477,12 +477,12 @@ class Main_Scene extends Simulation {
         // If the rocket is below 15km, color is sky blue
         // If the rocket is above 600km, color is black
         // In between, adjust color according to height
-        if (this.bodies[0].center[1] < 15000.0) {
+        if (this.bodies[0].center[1] < 30000.0) {
             this.color_lerp = 0;
-        } else if (this.bodies[0].center[1] > 250000.0) {
+        } else if (this.bodies[0].center[1] > 70000.0) {
             this.color_lerp = 1;
         } else {
-            this.color_lerp = ((this.bodies[0].center[1] - 15000.0) / 235000.0);
+            this.color_lerp = ((this.bodies[0].center[1] - 30000.0) / 40000.0);
         }
         // Linear interpolation equation
         const sky_color = (sky_blue.times(1 - this.color_lerp)).plus(space_black.times(this.color_lerp));
@@ -491,7 +491,9 @@ class Main_Scene extends Simulation {
         this.sky_material.color = color(sky_color[0], sky_color[1], sky_color[2], sky_color[3]);
         this.shapes["sky"].draw(context, program_state, Mat4.translation(0, -6309884, 0).times(Mat4.scale(7500000, 7500000, 7500000)), this.sky_material);
         //this.shapes["space"].draw(context, program_state, Mat4.translation(0, -6309884, 0).times(Mat4.scale(7600000, 7600000, 7600000)), this.space_material);
-        this.shapes["sun"].draw(context, program_state, Mat4.translation(100, 500000, 100).times(Mat4.scale(50000, 50000, 50000)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0)), this.sun_material);
+        this.shapes["sun"].draw(context, program_state, Mat4.translation(100000, 500000, 250000)
+                                                        .times(Mat4.scale(50000, 50000, 50000))
+                                                        .times(Mat4.rotation(0.9, -0.5, 0, -0.2)), this.sun_material);
 
         //particle effects
         //this.smoke_emitter.draw(context, program_state, Mat4.translation(20, 50, 0), this.smoke_material);
