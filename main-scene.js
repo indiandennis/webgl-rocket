@@ -495,7 +495,7 @@ class Main_Scene extends Simulation {
 
         //can move this stuff to the constructor if it doesn't change by t (but it probably will)
         // TODO: SUNLIGHT
-        program_state.lights = [new Light(vec4(100, 500, 250, 0), color(1, 1, 1, 1), 500000)];
+        program_state.lights = [new Light(vec4(100, 500, 250, 0), color(1, 1, 1, 1), 1000000)];
 
         // TODO: BOOSTER LIGHTS
         if(this.currently_firing) {
