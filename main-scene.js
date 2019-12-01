@@ -62,7 +62,10 @@ class Main_Scene extends Simulation {
             space: new Texture("assets/textures/space.png", "LINEAR_MIPMAP_LINEAR"),
             sun: new Texture("assets/textures/sun-from-earth.png"),
             smoke: new Texture("assets/textures/sphere.png", "LINEAR"),
-            explosion_atlas: new Texture("assets/textures/explosion_atlas.png", "LINEAR"),
+            explosion_atlas_0: new Texture("assets/textures/explosion_atlas_0.png", "LINEAR"),
+            explosion_atlas_1: new Texture("assets/textures/explosion_atlas_1.png", "LINEAR"),
+            explosion_atlas_2: new Texture("assets/textures/explosion_atlas_2.png", "LINEAR"),
+            explosion_atlas_3: new Texture("assets/textures/explosion_atlas_3.png", "LINEAR"),
         };
 
         this.shapes = {
@@ -85,8 +88,6 @@ class Main_Scene extends Simulation {
             "tower": new defs.Shape_From_File("assets/objects/tower.obj"),
             "payload_bridge": new defs.Shape_From_File("assets/objects/payload_bridge.obj"),
             "stable_bridge": new defs.Shape_From_File("assets/objects/stable_bridgeX2.obj"),
-
-            "explosion": new defs.Billboard_Quad(),
 
             // TODO: OBJECTS
             "sky": new defs.Internal_Subdivision_Sphere(4),
@@ -177,9 +178,12 @@ class Main_Scene extends Simulation {
             diffusivity: 0,
             texture: this.textures.sun,
         });
-        this.explosion_material = new Material(new defs.Billboard_Shader(), {
+        this.explosion_material = new Material(new defs.Billboard_Explosion_Shader(), {
             color: color(0, 0, 0, 1),
-            texture: this.textures.explosion_atlas
+            texture0: this.textures.explosion_atlas_0,
+            texture1: this.textures.explosion_atlas_1,
+            texture2: this.textures.explosion_atlas_2,
+            texture3: this.textures.explosion_atlas_3,
         });
 
 
@@ -264,7 +268,7 @@ class Main_Scene extends Simulation {
                 [this.rocket_material],
                 this.scale_factor,
                 [vec4(-40, 0, -30, 1), vec4(40, 0, -30, 1), vec4(40, 0, 30, 1), vec4(-40, 0, 30, 1), vec4(40, 4.5, 30, 1), vec4(-40, 4.5, 30, 1), vec4(-40, 4.5, -30, 1), vec4(40, 4.5, -30, 1)]
-            ).emplace(Mat4.translation(0, -7, 0), vec3(0, 0, 0), 0, false),
+            ).emplace(Mat4.translation(0, -7, 0), vec3(0, 0, 0), 0, false, true),
             new Body(
                 [this.shapes["tower"]],
                 [Mat4.translation(0, 0, 0)],
@@ -309,6 +313,14 @@ class Main_Scene extends Simulation {
         this.fuel_cap3 = 40;
         this.fuel_cap4 = 20;
 
+
+        this.explosions = [
+            //create initial explosion to prevent lag later
+            {
+                "shape": new defs.Billboard_Quad(),
+                "mat": Mat4.translation(0, -10, 0)
+            }
+        ];
     }
 
     make_control_panel() {                           // make_control_panel(): Create the buttons for using the viewer.
@@ -354,7 +366,7 @@ class Main_Scene extends Simulation {
                 setTimeout(() => {
                     this.bodies[i].ignore_collisions = false;
                     console.log(i)
-                }, 4000);
+                }, 2000);
                 this.bodies[this.bottom_body].attached = false;
                 this.bodies[this.bottom_body].activated = false;
                 this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
@@ -371,161 +383,163 @@ class Main_Scene extends Simulation {
 
         //TODO: update this to handle checking boosters, collisions, accelerations, and stuff
         for (let [i, b] of this.bodies.entries()) {
-            if (i === 0) {
-                if (this.bodies[this.bottom_body].activated && this.currently_firing) {
-                    if (this.just_activated) {
-                        //b.linear_acceleration = b.linear_acceleration.plus(vec3(0, 1, 0));
+            if (b.enabled) {
+                if (i === 0) {
+                    if (this.bodies[this.bottom_body].activated && this.currently_firing) {
+                        if (this.just_activated) {
+                            //b.linear_acceleration = b.linear_acceleration.plus(vec3(0, 1, 0));
+                        }
+                        if (b.linear_acceleration[1] < 6 * 9.8 * this.scale_factor[1])
+                            b.linear_acceleration = b.linear_acceleration.plus(vec3(0, .1 * this.scale_factor[1], 0).times(dt / 1000));
+                        b.linear_velocity = b.linear_velocity.plus(b.linear_acceleration.times(dt));
+                        //console.log("hit")
+                    } else {
+                        if (this.bodies[this.bottom_body].center[1] <= -1) {
+                            b.linear_acceleration = vec3(0, 0, 0);
+                            b.linear_velocity = vec3(0, 0, 0);
+                            b.angular_acceleration = 0;
+                            b.angular_velocity = 0;
+                        } else {
+                            b.linear_acceleration = vec3(0, 0, 0);
+                            b.linear_velocity = b.linear_velocity.plus(vec3(0, -9.8 * this.scale_factor[0], 0).times(dt / 100));
+                            b.angular_acceleration = 0;
+                            b.angular_velocity += b.angular_acceleration * dt;
+                        }
                     }
-                    if (b.linear_acceleration[1] < 6 * 9.8 * this.scale_factor[1])
-                        b.linear_acceleration = b.linear_acceleration.plus(vec3(0, .1 * this.scale_factor[1], 0).times(dt / 1000));
-                    b.linear_velocity = b.linear_velocity.plus(b.linear_acceleration.times(dt));
-                    //console.log("hit")
+                } else if (b.attached) {
+                    b.linear_acceleration = this.bodies[0].linear_acceleration;
+                    b.linear_velocity = this.bodies[0].linear_velocity;
+                    b.angular_velocity = this.bodies[0].angular_velocity;
+                    b.angular_acceleration = this.bodies[0].angular_velocity;
+                    b.spin_axis = this.bodies[0].spin_axis;
                 } else {
-                    if (this.bodies[this.bottom_body].center[1] <= -1) {
+                    if (b.center[1] <= -1) {
                         b.linear_acceleration = vec3(0, 0, 0);
                         b.linear_velocity = vec3(0, 0, 0);
                         b.angular_acceleration = 0;
                         b.angular_velocity = 0;
                     } else {
                         b.linear_acceleration = vec3(0, 0, 0);
-                        b.linear_velocity = b.linear_velocity.plus(vec3(0, -9.8 * this.scale_factor[0], 0).times(dt / 100));
+                        b.linear_velocity = b.linear_velocity.plus(vec3(0, -9.8, 0).times(dt / 100));
                         b.angular_acceleration = 0;
-                        b.angular_velocity += b.angular_acceleration * dt;
-                    }
-                }
-            } else if (b.attached) {
-                b.linear_acceleration = this.bodies[0].linear_acceleration;
-                b.linear_velocity = this.bodies[0].linear_velocity;
-                b.angular_velocity = this.bodies[0].angular_velocity;
-                b.angular_acceleration = this.bodies[0].angular_velocity;
-                b.spin_axis = this.bodies[0].spin_axis;
-            } else {
-                if (b.center[1] <= -1) {
-                    b.linear_acceleration = vec3(0, 0, 0);
-                    b.linear_velocity = vec3(0, 0, 0);
-                    b.angular_acceleration = 0;
-                    b.angular_velocity = 0;
-                } else {
-                    b.linear_acceleration = vec3(0, 0, 0);
-                    b.linear_velocity = b.linear_velocity.plus(vec3(0, -9.8, 0).times(dt / 100));
-                    b.angular_acceleration = 0;
 
-                    // TODO: ANIMATE DRIFTING OF DEBRIS
-                    if (this.just_detached) {
-                        switch (i) {
-                            case 1:
-                                b.linear_velocity = b.linear_velocity.plus(vec3(-500, -15, 500).times(dt / 500));
-                                break;
-                            case 2:
-                                b.linear_velocity = b.linear_velocity.plus(vec3(-950, -15, 300).times(dt / 500));
-                                break;
-                            case 3:
-                                b.linear_velocity = b.linear_velocity.plus(vec3(500, -15, 750).times(dt / 500));
-                                break;
-                            case 4:
-                                b.linear_velocity = b.linear_velocity.plus(vec3(-1000, -15, 0).times(dt / 500));
-                                break;
-                            case 5:
-                                b.linear_velocity = b.linear_velocity.plus(vec3(1000, -9.8, 0).times(dt / 500));
-                                break;
-                            case 6:
-                                b.linear_velocity = b.linear_velocity.plus(vec3(500, -9.8, (Math.sqrt(3) / 2) * 1000).times(dt / 500));
-                                break;
-                            case 7:
-                                b.linear_velocity = b.linear_velocity.plus(vec3(-500, -9.8, (Math.sqrt(3) / 2) * 1000).times(dt / 500));
-                                break;
-                            case 8:
-                                b.linear_velocity = b.linear_velocity.plus(vec3(500, -9.8, -(Math.sqrt(3) / 2) * 1000).times(dt / 500));
-                                break;
-                            case 9:
-                                b.linear_velocity = b.linear_velocity.plus(vec3(-500, -9.8, -(Math.sqrt(3) / 2) * 1000).times(dt / 500));
-                                break;
-                            default:
-                                b.linear_velocity = b.linear_velocity.plus(vec3(0, -9.8, 0).times(dt / 1000));
+                        // TODO: ANIMATE DRIFTING OF DEBRIS
+                        if (this.just_detached) {
+                            switch (i) {
+                                case 1:
+                                    b.linear_velocity = b.linear_velocity.plus(vec3(-500, -15, 500).times(dt / 500));
+                                    break;
+                                case 2:
+                                    b.linear_velocity = b.linear_velocity.plus(vec3(-950, -15, 300).times(dt / 500));
+                                    break;
+                                case 3:
+                                    b.linear_velocity = b.linear_velocity.plus(vec3(500, -15, 750).times(dt / 500));
+                                    break;
+                                case 4:
+                                    b.linear_velocity = b.linear_velocity.plus(vec3(-1000, -15, 0).times(dt / 500));
+                                    break;
+                                case 5:
+                                    b.linear_velocity = b.linear_velocity.plus(vec3(1000, -9.8, 0).times(dt / 500));
+                                    break;
+                                case 6:
+                                    b.linear_velocity = b.linear_velocity.plus(vec3(500, -9.8, (Math.sqrt(3) / 2) * 1000).times(dt / 500));
+                                    break;
+                                case 7:
+                                    b.linear_velocity = b.linear_velocity.plus(vec3(-500, -9.8, (Math.sqrt(3) / 2) * 1000).times(dt / 500));
+                                    break;
+                                case 8:
+                                    b.linear_velocity = b.linear_velocity.plus(vec3(500, -9.8, -(Math.sqrt(3) / 2) * 1000).times(dt / 500));
+                                    break;
+                                case 9:
+                                    b.linear_velocity = b.linear_velocity.plus(vec3(-500, -9.8, -(Math.sqrt(3) / 2) * 1000).times(dt / 500));
+                                    break;
+                                default:
+                                    b.linear_velocity = b.linear_velocity.plus(vec3(0, -9.8, 0).times(dt / 1000));
+                            }
                         }
-                    }
 
 
-                    // TODO: ANIMATE ROTATION OF DEBRIS
-                    if (this.separation_count === 1 && i > 3 && i < 10) {
-                        switch (this.booster_angles[this.booster_count]) {
-                            case 0:
-                                b.spin_axis = vec3(0, 0, 1);
-                                break;
-                            case Math.PI:
-                                b.spin_axis = vec3(0, 0, -1);
-                                break;
-                            case 2 * Math.PI / 3:
-                                b.spin_axis = vec3(Math.sqrt(3) / 2, 0, -1 / 2);
-                                break;
-                            case Math.PI / 3:
-                                b.spin_axis = vec3(Math.sqrt(3) / 2, 0, 1 / 2);
-                                break;
-                            case 4 * Math.PI / 3:
-                                b.spin_axis = vec3(-Math.sqrt(3) / 2, 0, -1 / 2);
-                                break;
-                            case 5 * Math.PI / 3:
-                                b.spin_axis = vec3(-Math.sqrt(3) / 2, 0, 1 / 2);
-                                break;
+                        // TODO: ANIMATE ROTATION OF DEBRIS
+                        if (this.separation_count === 1 && i > 3 && i < 10) {
+                            switch (this.booster_angles[this.booster_count]) {
+                                case 0:
+                                    b.spin_axis = vec3(0, 0, 1);
+                                    break;
+                                case Math.PI:
+                                    b.spin_axis = vec3(0, 0, -1);
+                                    break;
+                                case 2 * Math.PI / 3:
+                                    b.spin_axis = vec3(Math.sqrt(3) / 2, 0, -1 / 2);
+                                    break;
+                                case Math.PI / 3:
+                                    b.spin_axis = vec3(Math.sqrt(3) / 2, 0, 1 / 2);
+                                    break;
+                                case 4 * Math.PI / 3:
+                                    b.spin_axis = vec3(-Math.sqrt(3) / 2, 0, -1 / 2);
+                                    break;
+                                case 5 * Math.PI / 3:
+                                    b.spin_axis = vec3(-Math.sqrt(3) / 2, 0, 1 / 2);
+                                    break;
+                            }
+                            b.angular_velocity = 0.02;
+                            this.booster_count += 1;
+                        } else if (this.separation_count === 2 && i === 3) {
+                            b.spin_axis = vec3(0.5, 0, -0.75);
+                            b.angular_velocity = 0.01;
+                        } else if (this.separation_count === 3 && i === 2) {
+                            b.spin_axis = vec3(-0.95, 0, 0.30);
+                            b.angular_velocity = 0.01;
+                        } else if (this.separation_count === 4 && i === 1) {
+                            b.spin_axis = vec3(0.5, 0, 0.5);
+                            b.angular_velocity = 0.01;
+                        } else {
+                            b.angular_velocity += b.angular_acceleration * dt;
                         }
-                        b.angular_velocity = 0.02;
-                        this.booster_count += 1;
-                    } else if (this.separation_count === 2 && i === 3) {
-                        b.spin_axis = vec3(0.5, 0, -0.75);
-                        b.angular_velocity = 0.01;
-                    } else if (this.separation_count === 3 && i === 2) {
-                        b.spin_axis = vec3(-0.95, 0, 0.30);
-                        b.angular_velocity = 0.01;
-                    } else if (this.separation_count === 4 && i === 1) {
-                        b.spin_axis = vec3(0.5, 0, 0.5);
-                        b.angular_velocity = 0.01;
-                    } else {
-                        b.angular_velocity += b.angular_acceleration * dt;
+
                     }
+
+                    //console.log("hit2")
 
                 }
-
-                //console.log("hit2")
-
             }
-        }
-        this.just_detached = false;
-        this.just_activated = false;
+            this.just_detached = false;
+            this.just_activated = false;
 
-        if (this.currently_firing) {
-            switch (this.separation_count) {
-                case 0:
-                    if (this.fuel_cap1 > 0) {
-                        this.fuel_cap1 -= (dt / 10);
-                    } else {
-                        this.currently_firing = false;
-                        this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
-                    }
-                    break;
-                case 1:
-                    if (this.fuel_cap2 > 0) {
-                        this.fuel_cap2 -= (dt / 10);
-                    } else {
-                        this.currently_firing = false;
-                        this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
-                    }
-                    break;
-                case 2:
-                    if (this.fuel_cap3 > 0) {
-                        this.fuel_cap3 -= (dt / 10);
-                    } else {
-                        this.currently_firing = false;
-                        this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
-                    }
-                    break;
-                case 3:
-                    if (this.fuel_cap4 > 0) {
-                        this.fuel_cap4 -= (dt / 10);
-                    } else {
-                        this.currently_firing = false;
-                        this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
-                    }
-                    break;
+            if (this.currently_firing) {
+                switch (this.separation_count) {
+                    case 0:
+                        if (this.fuel_cap1 > 0) {
+                            this.fuel_cap1 -= (dt / 10);
+                        } else {
+                            this.currently_firing = false;
+                            this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
+                        }
+                        break;
+                    case 1:
+                        if (this.fuel_cap2 > 0) {
+                            this.fuel_cap2 -= (dt / 10);
+                        } else {
+                            this.currently_firing = false;
+                            this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
+                        }
+                        break;
+                    case 2:
+                        if (this.fuel_cap3 > 0) {
+                            this.fuel_cap3 -= (dt / 10);
+                        } else {
+                            this.currently_firing = false;
+                            this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
+                        }
+                        break;
+                    case 3:
+                        if (this.fuel_cap4 > 0) {
+                            this.fuel_cap4 -= (dt / 10);
+                        } else {
+                            this.currently_firing = false;
+                            this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
+                        }
+                        break;
+                }
             }
         }
     }
@@ -533,7 +547,11 @@ class Main_Scene extends Simulation {
     check_collisions() {
         for (let i = 1; i < this.bodies.length; i++) {
             let b = this.bodies[i];
+            if (!b.enabled)
+                continue;
             for (let j = i + 1; j < this.bodies.length; j++) {
+                if (!this.bodies[j].enabled)
+                    continue;
                 //only check collisions if at least one body is not attached
                 if ((i === 10 || j === 10) && (i === 11 || j === 11)) {
                     continue;
@@ -545,7 +563,29 @@ class Main_Scene extends Simulation {
                         continue;
 
                     if (b.check_collision(this.bodies[j].hitbox, this.bodies[j].drawn_location)) {
-                        console.log("boom: " + i + ", " + j);
+                        //add explosions to be drawn
+                        this.explosions.push({
+                            "shape": new defs.Billboard_Quad(),
+                            "mat": Mat4.scale(50, 50, 50).times(Mat4.translation(...b.center))
+                        });
+                        this.explosions.push({
+                            "shape": new defs.Billboard_Quad(),
+                            "mat": Mat4.translation(this.bodies[j].center[0], this.bodies[j].center[1] + this.bodies[j].hitbox[4][1] / 2, this.bodies[j].center[2])
+                                .times(Mat4.scale(this.bodies[j].hitbox[4][1], this.bodies[j].hitbox[4][1], this.bodies[j].hitbox[4][1]))
+                        });
+                        //derender shapes
+                        b.enabled = false;
+                        this.bodies[j].enabled = false;
+                        if (i <= this.bottom_body) {
+                            this.currently_firing = false;
+                            this.bottom_body = i - 1;
+                        }
+                        if (j <= this.bottom_body) {
+                            this.currently_firing = false;
+                            this.bottom_body = j - 1;
+                        }
+                        //
+                        //console.log("boom: " + i + ", " + j);
                     }
                 }
             }
@@ -636,7 +676,11 @@ class Main_Scene extends Simulation {
         //particle effects
         //this.smoke_emitter.draw(context, program_state, Mat4.translation(20, 50, 0), this.smoke_material);
 
-        this.shapes["explosion"].draw(context, program_state, Mat4.translation(50, 50, 0).times(Mat4.scale(20, 20, 20)), this.explosion_material);
+        //this.shapes["explosion"].draw(context, program_state, Mat4.translation(50, 50, 0).times(Mat4.scale(20, 20, 20)), this.explosion_material);
+
+        for (let e of this.explosions) {
+            e.shape.draw(context, program_state, e.mat, this.explosion_material);
+        }
     }
 }
 

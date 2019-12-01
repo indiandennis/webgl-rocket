@@ -28,7 +28,8 @@ class Simulation extends Scene {                                         // **Si
         while (Math.abs(this.time_accumulator) >= this.dt) {                                                       // Single step of the simulation for all bodies:
             this.update_state(this.dt);
             for (let b of this.bodies)
-                b.advance(this.dt);
+                if (b.enabled)
+                    b.advance(this.dt);
 
             this.check_collisions();
             // Following the advice of the article, de-couple
@@ -66,9 +67,10 @@ class Simulation extends Scene {                                         // **Si
             this.simulate(program_state.animation_delta_time);
         // Draw each shape at its current location:
         for (let b of this.bodies) {
-            for (const [i, s] of b.shapes.entries()) {
-                s.draw(context, program_state, b.drawn_location.times(b.relative_locations[i]), b.materials[i]);
-            }
+            if (b.enabled)
+                for (const [i, s] of b.shapes.entries()) {
+                    s.draw(context, program_state, b.drawn_location.times(b.relative_locations[i]), b.materials[i]);
+                }
         }
     }
 
