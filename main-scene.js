@@ -57,6 +57,7 @@ class Main_Scene extends Simulation {
             earth: new Texture("assets/textures/earth.png", "LINEAR_MIPMAP_LINEAR"),
             body: new Texture("assets/textures/stage-2-body.png"),
             sky: new Texture("assets/textures/gradient.png", "LINEAR_MIPMAP_LINEAR"),
+            cloud_layer: new Texture("assets/textures/cloud_layer.png", "LINEAR_MIPMAP_LINEAR"),
             space: new Texture("assets/textures/space.png", "LINEAR_MIPMAP_LINEAR"),
             sun: new Texture("assets/textures/sun-from-earth.png"),
             smoke: new Texture("assets/textures/sphere.png", "LINEAR"),
@@ -87,7 +88,7 @@ class Main_Scene extends Simulation {
             "payload_bridge": new defs.Shape_From_File("assets/objects/payload_bridge.obj"),
             "stable_bridge": new defs.Shape_From_File("assets/objects/stable_bridgeX2.obj"),
 
-            // TODO: OBJECTS
+            "cloud_layer": new defs.Internal_Subdivision_Sphere(8),
             "sky": new defs.Internal_Subdivision_Sphere(4),
             "space": new defs.Internal_Subdivision_Sphere(4),
             "sun": new defs.Square(),
@@ -155,6 +156,14 @@ class Main_Scene extends Simulation {
             texture: this.textures.earth,
         });
 
+        this.cloud_layer_material = new Material(new defs.Textured_Phong(), {
+            color: color(0, 0, 0, 1),
+            ambient: 1,
+            specularity: 0,
+            diffusivity: 0.5,
+            texture: this.textures.cloud_layer,
+        });
+
         this.sky_material = new Material(new defs.Textured_Phong(), {
             color: color(0.443, 0.694, 0.91, 1),
             ambient: 1,
@@ -162,6 +171,7 @@ class Main_Scene extends Simulation {
             diffusivity: 0,
             texture: this.textures.sky,
         });
+
         this.space_material = new Material(new defs.Textured_Phong(), {
             color: color(0, 0, 0, 1),
             ambient: 1,
@@ -169,12 +179,14 @@ class Main_Scene extends Simulation {
             diffusivity: 0,
             texture: this.textures.space,
         });
+
         this.sun_material = new Material(new defs.Textured_Phong(), {
             color: color(0, 0, 0, 1),
             ambient: 1,
             diffusivity: 0,
             texture: this.textures.sun,
         });
+
         this.explosion_material = new Material(new defs.Billboard_Explosion_Shader(), {
             color: color(0, 0, 0, 1),
             texture0: this.textures.explosion_atlas_0,
@@ -660,6 +672,11 @@ class Main_Scene extends Simulation {
         this.shapes["sun"].draw(context, program_state, Mat4.translation(100000, 1500000, 250000)
             .times(Mat4.scale(85000, 85000, 85000))
             .times(Mat4.rotation(1.2, -0.8, 0, -0.2)), this.sun_material);
+
+        // TODO: DRAW CLOUD LAYER
+        this.shapes["cloud_layer"].draw(context, program_state, Mat4.translation(0, -6309888, 0)
+            .times(Mat4.scale(6350000, 6350000, 6350000))
+            .times(Mat4.rotation(Math.PI / 2, 1, 0.5, 1)), this.cloud_layer_material);
 
         //particle effects
         //this.smoke_emitter.draw(context, program_state, Mat4.translation(20, 50, 0), this.smoke_material);
