@@ -1586,7 +1586,8 @@ const Billboard_Shader = defs.Billboard_Shader =
                     
                     //if( tex_color.w < .01 ) discard;
                         // Compute color:
-                    gl_FragColor = vec4( tex_color.xyz + shape_color.xyz , shape_color.w * tex_color.w ); 
+                    gl_FragColor = vec4( tex_color.xyz + shape_color.xyz , shape_color.w * tex_color.w );
+                    if(gl_FragColor.a < 0.05) discard; 
                 }
             `
         }
@@ -1804,6 +1805,7 @@ const Billboard_Explosion_Shader = defs.Billboard_Explosion_Shader =
                     //if( tex_color.w < .01 ) discard;
                         // Compute color:
                     gl_FragColor = vec4( tex_color.xyz , tex_color.w ); 
+                    if(gl_FragColor.a < 0.05) discard;
                 }
             `
         }
@@ -1942,6 +1944,70 @@ const Billboard_Quad = defs.Billboard_Quad =
 
                 this.time += (Date.now() - this.prev_time) / 1000;
                 this.prev_time = Date.now();
+            }
+        }
+    };
+
+const Alpha_Textured = defs.Alpha_Textured =
+    class Alpha_Textured extends Phong_Shader {                       // **Textured_Phong** is a Phong Shader extended to addditionally decal a
+        // texture image over the drawn shape, lined up according to the texture
+        // coordinates that are stored at each shape vertex.
+        shared_glsl_code()           // ********* SHARED CODE, INCLUDED IN BOTH SHADERS *********
+        {
+            return ` precision mediump float;
+                    uniform vec4 shape_color;
+                    uniform vec3 squared_scale, camera_center;
+                    varying vec3 N, vertex_worldspace;
+                    `;
+        }
+
+        vertex_glsl_code()           // ********* VERTEX SHADER *********
+        {
+            return this.shared_glsl_code() + `
+                varying vec2 f_tex_coord;
+                attribute vec3 position, normal;                            // Position is expressed in object coordinates.
+                attribute vec2 texture_coord;
+                
+                uniform mat4 model_transform;
+                uniform mat4 projection_camera_model_transform;
+        
+                void main()
+                  {                                                                   // The vertex's final resting place (in NDCS):
+                    gl_Position = projection_camera_model_transform * vec4( position, 1.0 );
+                                                                                      // The final normal vector in screen space.
+                    N = normalize( mat3( model_transform ) * normal / squared_scale);
+                    
+                    vertex_worldspace = ( model_transform * vec4( position, 1.0 ) ).xyz;
+                                                      // Turn the per-vertex texture coordinate into an interpolated variable.
+                    f_tex_coord = texture_coord;
+                } 
+            `;
+        }
+
+        fragment_glsl_code()         // ********* FRAGMENT SHADER *********
+        {                          // A fragment is a pixel that's overlapped by the current triangle.
+            // Fragments affect the final image or get discarded due to depth.
+            return this.shared_glsl_code() + `
+        varying vec2 f_tex_coord;
+        uniform sampler2D texture;
+
+        void main()
+          {                                                          // Sample the texture image in the correct place:
+            vec4 tex_color = texture2D( texture, f_tex_coord );
+            if( tex_color.w < .01 ) discard;
+                                                                     // Compute an initial (ambient) color:
+            gl_FragColor = vec4( ( tex_color.xyz + shape_color.xyz ) , tex_color.z );
+                                                                     // Compute the final color with contributions from lights:
+          } `;
+        }
+
+        update_GPU(context, gpu_addresses, gpu_state, model_transform, material) {             // update_GPU(): Add a little more to the base class's version of this method.
+            super.update_GPU(context, gpu_addresses, gpu_state, model_transform, material);
+
+            if (material.texture && material.texture.ready) {                         // Select texture unit 0 for the fragment shader Sampler2D uniform called "texture":
+                context.uniform1i(gpu_addresses.texture, 0);
+                // For this draw, use the texture image from correct the GPU buffer:
+                material.texture.activate(context);
             }
         }
     };

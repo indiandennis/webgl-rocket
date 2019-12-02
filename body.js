@@ -49,7 +49,7 @@ class Body {                                   // **Body** can store and update 
         return 0;
     }
 
-    calculate_AABB(hitbox, drawn_location) {
+    calculate_AABB(hitbox = this.hitbox, drawn_location = this.drawn_location) {
         let transformed_hitbox = hitbox.map(x => drawn_location.times(x));
         let AABB = [vec4(...transformed_hitbox[0]), vec4(...transformed_hitbox[0])];
 

@@ -18,6 +18,8 @@ class Simulation extends Scene {                                         // **Si
         // "Fix Your Timestep" blog post.
         // This line gives ourselves a way to trick the simulator into thinking
         // that the display framerate is running fast or slow:
+        if (!this.bodies[0].enabled)
+            return;
         frame_time = this.time_scale * frame_time;
 
         // Avoid the spiral of death; limit the amount of time we will spend
@@ -64,7 +66,7 @@ class Simulation extends Scene {                                         // **Si
 
     display(context, program_state) {                                     // display(): advance the time and state of our whole simulation.
         if (program_state.animate)
-            this.simulate(program_state.animation_delta_time);
+            this.simulate(program_state.animation_delta_time / 1000);
         // Draw each shape at its current location:
         for (let b of this.bodies) {
             if (b.enabled)
