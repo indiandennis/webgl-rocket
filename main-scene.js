@@ -54,8 +54,13 @@ class Main_Scene extends Simulation {
 
         this.textures = {
             metal: new Texture("assets/textures/metal.jpg"),
+            concrete: new Texture("assets/textures/concrete.png"),
             earth: new Texture("assets/textures/earth.png", "LINEAR_MIPMAP_LINEAR"),
-            body: new Texture("assets/textures/stage-2-body.png"),
+            booster: new Texture("assets/textures/booster-body.png"),
+            stage_2: new Texture("assets/textures/stage-2-body.png"),
+            stage_3: new Texture("assets/textures/stage-3-body.png"),
+            stage_4: new Texture("assets/textures/stage-4-body.png"),
+            payload: new Texture("assets/textures/payload.png"),
             sky: new Texture("assets/textures/gradient.png", "LINEAR_MIPMAP_LINEAR"),
             cloud_layer: new Texture("assets/textures/cloud_layer.png", "LINEAR_MIPMAP_LINEAR"),
             space: new Texture("assets/textures/space.png", "LINEAR_MIPMAP_LINEAR"),
@@ -112,13 +117,44 @@ class Main_Scene extends Simulation {
             texture: this.textures.smoke,
         });
 
-
-        this.body_material = new Material(new defs.Textured_Phong(), {
+        this.booster_material = new Material(new defs.Textured_Phong(), {
             color: color(0, 0, 0, 1),
             ambient: .6,
             specularity: .2,
             diffusivity: .3,
-            texture: this.textures.body
+            texture: this.textures.booster
+        });
+
+        this.stage_2_material = new Material(new defs.Textured_Phong(), {
+            color: color(0, 0, 0, 1),
+            ambient: .6,
+            specularity: .2,
+            diffusivity: .3,
+            texture: this.textures.stage_2
+        });
+
+        this.stage_3_material = new Material(new defs.Textured_Phong(), {
+            color: color(0, 0, 0, 1),
+            ambient: .6,
+            specularity: .2,
+            diffusivity: .3,
+            texture: this.textures.stage_3
+        });
+
+        this.stage_4_material = new Material(new defs.Textured_Phong(), {
+            color: color(0, 0, 0, 1),
+            ambient: .6,
+            specularity: .2,
+            diffusivity: .3,
+            texture: this.textures.stage_4
+        });
+
+        this.payload = new Material(new defs.Textured_Phong(), {
+            color: color(0, 0, 0, 1),
+            ambient: .6,
+            specularity: .2,
+            diffusivity: .3,
+            texture: this.textures.payload
         });
 
         this.widget_options = {
@@ -141,12 +177,21 @@ class Main_Scene extends Simulation {
             texture: this.textures.metal,
         });
 
-        this.cloud = new Material(new defs.Phong_Shader(), {
-            color: color(1, 1, 1, 1),
-            ambient: .6,
-            specularity: .1,
-            diffusivity: .3
+        this.tower_material = new Material(new defs.Phong_Shader(), {
+            color: color(.67, .18, 0, 1),
+            ambient: .4,
+            specularity: .4,
+            diffusivity: .4,
         });
+
+        this.platform_material = new Material(new defs.Textured_Phong(), {
+            color: color(0, 0, 0, 1),
+            ambient: .4,
+            specularity: .2,
+            diffusivity: .4,
+            texture: this.textures.concrete,
+        });
+
 
         this.earth_material = new Material(new defs.Textured_Phong(), {
             color: color(.05, .05, .05, 1),
@@ -204,84 +249,84 @@ class Main_Scene extends Simulation {
             new Body(
                 [this.shapes["payload-fairing-half"], this.shapes["payload-fairing-half"]],
                 [Mat4.translation(0, 0, 0), Mat4.rotation(Math.PI, 0, 1, 0)],
-                [this.rocket_material, this.rocket_material],
+                [this.payload, this.payload],
                 this.scale_factor,
                 [vec4(-4, 0, -4, 1), vec4(4, 0, -4, 1), vec4(4, 0, 4, 1), vec4(-4, 0, 4, 1), vec4(-4, 18, -4, 1), vec4(4, 18, -4, 1), vec4(4, 18, 4, 1), vec4(-4, 18, 4, 1)]
             ).emplace(Mat4.translation(0, 56, 0), vec3(0, 0, 0), 0, false),
             new Body(
                 [this.shapes["stage-4-body"], this.shapes["stage-4-engine"], this.emitters["stage-4"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0), Mat4.translation(0, -1, 0)],
-                [this.rocket_material, this.metal_material, this.booster_smoke_material],
+                [this.stage_4_material, this.metal_material, this.booster_smoke_material],
                 this.scale_factor,
                 [vec4(-3, 0, -3, 1), vec4(3, 0, -3, 1), vec4(3, 0, 3, 1), vec4(-3, 0, 3, 1), vec4(3, 6, 3, 1), vec4(-3, 6, 3, 1), vec4(-3, 6, -3, 1), vec4(3, 6, -3, 1),] //TODO: verify this is correct
             ).emplace(Mat4.translation(0, 50, 0), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["stage-3-body"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"], this.shapes["stage-3-engine"], this.emitters["stage-3"], this.emitters["stage-3"], this.emitters["stage-3"], this.emitters["stage-3"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0), Mat4.translation(-2.5, 0, 0), Mat4.translation(-2.5, 0, +2.5), Mat4.translation(0, 0, +2.5), Mat4.translation(1.25, -1, -1.25), Mat4.translation(-1.25, -1, -1.25), Mat4.translation(-1.25, -1, +1.25), Mat4.translation(+1.25, -1, +1.25)],
-                [this.body_material, this.metal_material, this.metal_material, this.metal_material, this.metal_material, this.booster_smoke_material, this.booster_smoke_material, this.booster_smoke_material, this.booster_smoke_material],
+                [this.stage_3_material, this.metal_material, this.metal_material, this.metal_material, this.metal_material, this.booster_smoke_material, this.booster_smoke_material, this.booster_smoke_material, this.booster_smoke_material],
                 this.scale_factor,
                 [vec4(-3, 0, -3, 1), vec4(3, 0, -3, 1), vec4(3, 0, 3, 1), vec4(-3, 0, 3, 1), vec4(3, 25, 3, 1), vec4(-3, 25, 3, 1), vec4(-3, 25, -3, 1), vec4(3, 25, -3, 1)]
             ).emplace(Mat4.translation(0, 25, 0), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["stage-2-body"], this.shapes["stage-2-engine"], this.emitters["stage-2"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 0, 0), Mat4.translation(0, -2.5, 0)],
-                [this.rocket_material, this.metal_material, this.stage_2_smoke_material],
+                [this.stage_2_material, this.metal_material, this.stage_2_smoke_material],
                 this.scale_factor,
                 [vec4(-3, 0, -3, 1), vec4(3, 0, -3, 1), vec4(3, 0, 3, 1), vec4(-3, 0, 3, 1), vec4(3, 25, 3, 1), vec4(-3, 25, 3, 1), vec4(-3, 25, -3, 1), vec4(3, 25, -3, 1)]
             ).emplace(Mat4.translation(0, 0, 0), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"], this.emitters["booster"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0), Mat4.translation(.25, -1.1, .1)],
-                [this.rocket_material, this.rocket_material, this.metal_material, this.booster_smoke_material],
+                [this.booster_material, this.rocket_material, this.metal_material, this.booster_smoke_material],
                 this.scale_factor,
                 [vec4(-1.5, -1, -1.5, 1), vec4(1.5, -1, -1.5, 1), vec4(1.5, -1, 1.5, 1), vec4(-1.5, -1, 1.5, 1), vec4(1.5, 24, 1.5, 1), vec4(-1.5, 24, 1.5, 1), vec4(-1.5, 24, -1.5, 1), vec4(1.5, 24, -1.5, 1)]
             ).emplace(Mat4.translation(-4.5, 0, 0), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"], this.emitters["booster"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0), Mat4.translation(.25, -1.1, .1)],
-                [this.rocket_material, this.rocket_material, this.metal_material, this.booster_smoke_material],
+                [this.booster_material, this.rocket_material, this.metal_material, this.booster_smoke_material],
                 this.scale_factor,
                 [vec4(-1.5, -1, -1.5, 1), vec4(1.5, -1, -1.5, 1), vec4(1.5, -1, 1.5, 1), vec4(-1.5, -1, 1.5, 1), vec4(1.5, 24, 1.5, 1), vec4(-1.5, 24, 1.5, 1), vec4(-1.5, 24, -1.5, 1), vec4(1.5, 24, -1.5, 1)]
             ).emplace(Mat4.translation(4.5, 0, 0).times(Mat4.rotation(Math.PI, 0, 1, 0)), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"], this.emitters["booster"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0), Mat4.translation(.25, -1.1, .1)],
-                [this.rocket_material, this.rocket_material, this.metal_material, this.booster_smoke_material],
+                [this.booster_material, this.rocket_material, this.metal_material, this.booster_smoke_material],
                 this.scale_factor,
                 [vec4(-1.5, -1, -1.5, 1), vec4(1.5, -1, -1.5, 1), vec4(1.5, -1, 1.5, 1), vec4(-1.5, -1, 1.5, 1), vec4(1.5, 24, 1.5, 1), vec4(-1.5, 24, 1.5, 1), vec4(-1.5, 24, -1.5, 1), vec4(1.5, 24, -1.5, 1)]
             ).emplace(Mat4.translation(4.5 / 2, 0, Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(2 * Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"], this.emitters["booster"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0), Mat4.translation(.25, -1.1, .1)],
-                [this.rocket_material, this.rocket_material, this.metal_material, this.booster_smoke_material],
+                [this.booster_material, this.rocket_material, this.metal_material, this.booster_smoke_material],
                 this.scale_factor,
                 [vec4(-1.5, -1, -1.5, 1), vec4(1.5, -1, -1.5, 1), vec4(1.5, -1, 1.5, 1), vec4(-1.5, -1, 1.5, 1), vec4(1.5, 24, 1.5, 1), vec4(-1.5, 24, 1.5, 1), vec4(-1.5, 24, -1.5, 1), vec4(1.5, 24, -1.5, 1)]
             ).emplace(Mat4.translation(-4.5 / 2, 0, Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"], this.emitters["booster"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0), Mat4.translation(.25, -1.1, .1)],
-                [this.rocket_material, this.rocket_material, this.metal_material, this.booster_smoke_material],
+                [this.booster_material, this.rocket_material, this.metal_material, this.booster_smoke_material],
                 this.scale_factor,
                 [vec4(-1.5, -1, -1.5, 1), vec4(1.5, -1, -1.5, 1), vec4(1.5, -1, 1.5, 1), vec4(-1.5, -1, 1.5, 1), vec4(1.5, 24, 1.5, 1), vec4(-1.5, 24, 1.5, 1), vec4(-1.5, 24, -1.5, 1), vec4(1.5, 24, -1.5, 1)]
             ).emplace(Mat4.translation(4.5 / 2, 0, -Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(4 * Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["booster-body"], this.shapes["booster-nose"], this.shapes["booster-engine"], this.emitters["booster"]],
                 [Mat4.translation(0, 0, 0), Mat4.translation(0, 18, 0), Mat4.translation(0, 0, 0), Mat4.translation(.25, -1.1, .1)],
-                [this.rocket_material, this.rocket_material, this.metal_material, this.booster_smoke_material],
+                [this.booster_material, this.rocket_material, this.metal_material, this.booster_smoke_material],
                 this.scale_factor,
                 [vec4(-1.5, -1, -1.5, 1), vec4(1.5, -1, -1.5, 1), vec4(1.5, -1, 1.5, 1), vec4(-1.5, -1, 1.5, 1), vec4(1.5, 24, 1.5, 1), vec4(-1.5, 24, 1.5, 1), vec4(-1.5, 24, -1.5, 1), vec4(1.5, 24, -1.5, 1)]
             ).emplace(Mat4.translation(-4.5 / 2, 0, -Math.sqrt(3) / 2 * 4.5).times(Mat4.rotation(5 * Math.PI / 3, 0, 1, 0)), vec3(0, 0, 0), 0),
             new Body(
                 [this.shapes["platform"]],
                 [Mat4.translation(0, 0, 0)],
-                [this.rocket_material],
+                [this.platform_material],
                 this.scale_factor,
                 [vec4(-50, 0, -50, 1), vec4(50, 0, -50, 1), vec4(50, 0, 50, 1), vec4(-50, 0, 50, 1), vec4(50, 6, 50, 1), vec4(-50, 6, 50, 1), vec4(-50, 6, -50, 1), vec4(50, 6, -50, 1)]
             ).emplace(Mat4.translation(0, -8, 0), vec3(0, 0, 0), 0, false, true),
             new Body(
                 [this.shapes["tower"]],
                 [Mat4.translation(0, 0, 0)],
-                [this.rocket_material],
+                [this.tower_material],
                 this.scale_factor,
                 [vec4(-12, 0, -10, 1), vec4(11, 0, -10, 1), vec4(11, 0, 10, 1), vec4(-12, 0, 10, 1), vec4(-12, 94, -10, 1), vec4(11, 94, -10, 1), vec4(11, 94, 10, 1), vec4(-12, 94, 10, 1),]
             ).emplace(Mat4.translation(-18, -2, 0), vec3(0, 0, 0), 0, false),
@@ -313,10 +358,10 @@ class Main_Scene extends Simulation {
 
         this.currently_firing = false;
 
-        this.fuel_cap1 = 30;
-        this.fuel_cap2 = 40;
-        this.fuel_cap3 = 40;
-        this.fuel_cap4 = 20;
+        this.fuel_cap1 = 25;
+        this.fuel_cap2 = 35;
+        this.fuel_cap3 = 35;
+        this.fuel_cap4 = 10;
 
 
         this.explosions = [
@@ -329,21 +374,7 @@ class Main_Scene extends Simulation {
     }
 
     make_control_panel() {                           // make_control_panel(): Create the buttons for using the viewer.
-        this.key_triggered_button("Action", ["b"], () => this.action());
-        this.key_triggered_button("Speed up time", ["Shift", "T"], () => this.time_scale *= 5);
-        this.key_triggered_button("Slow down time", ["t"], () => this.time_scale /= 5);
-        this.new_line();
-        this.live_string(box => {
-            box.textContent = "Time scale: " + this.time_scale
-        });
-        this.new_line();
-        this.live_string(box => {
-            box.textContent = "Fixed simulation time step size: " + this.dt
-        });
-        this.new_line();
-        this.live_string(box => {
-            box.textContent = this.steps_taken + " timesteps were taken so far."
-        });
+        this.key_triggered_button("Action", [" "], () => this.action());
     }
 
     action() {
@@ -354,12 +385,14 @@ class Main_Scene extends Simulation {
                 setTimeout(() => this.launched = true, 500);
 
             this.just_activated = true;
-            do {
-                this.bodies[i].activated = true;
-                this.bodies[i].shapes[this.bodies[i].shapes.length - 1].enable();
-                this.bodies[0].linear_acceleration = vec3(0, .4, 0);
-                i--;
-            } while (i > 3);
+            if (this.bottom_body > 0) {
+                do {
+                    this.bodies[i].activated = true;
+                    this.bodies[i].shapes[this.bodies[i].shapes.length - 1].enable();
+                    this.bodies[0].linear_acceleration = vec3(0, .4, 0);
+                    i--;
+                } while (i > 3);
+            }
 
         } else {
             this.currently_firing = false;
@@ -375,7 +408,8 @@ class Main_Scene extends Simulation {
                 this.bodies[this.bottom_body].attached = false;
                 this.bodies[this.bottom_body].activated = false;
                 this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
-                this.bottom_body--;
+                if (this.bottom_body > 0)
+                    this.bottom_body--;
                 if (this.bottom_body < 0)
                     alert("End of Simulation");
             } while (this.bottom_body > 3);
@@ -397,8 +431,8 @@ class Main_Scene extends Simulation {
                             b.linear_acceleration = b.linear_acceleration.plus(vec3(0, 1, 0));
                         }
                         if (b.linear_acceleration[1] < 10 * 9.8)
-                            b.linear_acceleration = b.linear_acceleration.plus(vec3(0, .5, 0).times(dt));
-                        b.linear_velocity = b.linear_velocity.plus(b.linear_acceleration.times(dt));
+                            b.linear_acceleration = b.linear_acceleration.plus(vec3(0, .5, 0).times(dt / 1000));
+                        b.linear_velocity = b.linear_velocity.plus(b.linear_acceleration.times(dt / 5));
                         //console.log("hit")
                     } else if (this.bodies[this.bottom_body].center[1] <= 0) {
                         if (this.launched) {
@@ -425,9 +459,9 @@ class Main_Scene extends Simulation {
                     } else {
                         b.linear_acceleration = vec3(0, -9.8, 0);
                         if (b.linear_velocity[1] > -70)
-                            b.linear_velocity = b.linear_velocity.plus(b.linear_acceleration.times(dt));
+                            b.linear_velocity = b.linear_velocity.plus(b.linear_acceleration.times(dt / 15));
                         b.angular_acceleration = 0;
-                        b.angular_velocity += b.angular_acceleration * dt;
+                        b.angular_velocity += b.angular_acceleration * dt / 1000;
                     }
                 } else if (b.attached) {
                     b.linear_acceleration = this.bodies[0].linear_acceleration;
@@ -449,44 +483,44 @@ class Main_Scene extends Simulation {
                     }
                     b.linear_acceleration = vec3(0, -9.8, 0);
                     if (b.linear_velocity[1] > -70)
-                        b.linear_velocity = b.linear_velocity.plus(b.linear_acceleration.times(dt));
+                        b.linear_velocity = b.linear_velocity.plus(b.linear_acceleration.times(dt / 15));
                     b.angular_acceleration = 0;
 
                     // TODO: ANIMATE DRIFTING OF DEBRIS
                     if (this.just_detached) {
                         switch (i) {
                             case 1:
-                                b.linear_velocity = b.linear_velocity.plus(vec3(-.5, -.25, .500));
+                                b.linear_velocity = b.linear_velocity.plus(vec3(-.5 / 5, -.25 / 5, .500 / 5));
                                 break;
                             case 2:
-                                b.linear_velocity = b.linear_velocity.plus(vec3(-.95, -.25, .300));
+                                b.linear_velocity = b.linear_velocity.plus(vec3(-.95 / 5, -.25 / 5, .300 / 5));
                                 break;
                             case 3:
-                                b.linear_velocity = b.linear_velocity.plus(vec3(.500, -.25, .750));
+                                b.linear_velocity = b.linear_velocity.plus(vec3(.50 / 5, -.25 / 5, .750 / 5));
                                 break;
                             case 4:
                                 b.spin_axis = vec3(0, 0, 1);
-                                b.linear_velocity = b.linear_velocity.plus(vec3(-1.000, 0, 0));
+                                b.linear_velocity = b.linear_velocity.plus(vec3(-1.000 / 5, 0, 0));
                                 break;
                             case 5:
                                 b.spin_axis = vec3(0, 0, -1);
-                                b.linear_velocity = b.linear_velocity.plus(vec3(1.000, 0, 0));
+                                b.linear_velocity = b.linear_velocity.plus(vec3(1.000 / 5, 0, 0));
                                 break;
                             case 6:
                                 b.spin_axis = vec3(Math.sqrt(3) / 2, 0, -1 / 2);
-                                b.linear_velocity = b.linear_velocity.plus(vec3(.5, 0, (Math.sqrt(3) / 2)));
+                                b.linear_velocity = b.linear_velocity.plus(vec3(.5 / 5, 0, (Math.sqrt(3) / 2) / 5));
                                 break;
                             case 7:
                                 b.spin_axis = vec3(Math.sqrt(3) / 2, 0, 1 / 2);
-                                b.linear_velocity = b.linear_velocity.plus(vec3(-.5, 0, (Math.sqrt(3) / 2)));
+                                b.linear_velocity = b.linear_velocity.plus(vec3(-.5 / 5, 0, (Math.sqrt(3) / 2) / 5));
                                 break;
                             case 8:
                                 b.spin_axis = vec3(-Math.sqrt(3) / 2, 0, -1 / 2);
-                                b.linear_velocity = b.linear_velocity.plus(vec3(.5, 0, -(Math.sqrt(3) / 2)));
+                                b.linear_velocity = b.linear_velocity.plus(vec3(.5 / 5, 0, -(Math.sqrt(3) / 2) / 5));
                                 break;
                             case 9:
                                 b.spin_axis = vec3(-Math.sqrt(3) / 2, 0, 1 / 2);
-                                b.linear_velocity = b.linear_velocity.plus(vec3(.5, 0, -(Math.sqrt(3) / 2)));
+                                b.linear_velocity = b.linear_velocity.plus(vec3(.5 / 5, 0, -(Math.sqrt(3) / 2) / 5));
                                 break;
                         }
                     }
@@ -494,18 +528,18 @@ class Main_Scene extends Simulation {
 
                     // TODO: ANIMATE ROTATION OF DEBRIS
                     if (this.separation_count === 1 && i > 3 && i < 10) {
-                        b.angular_velocity = .2;
+                        b.angular_velocity = .02;
                     } else if (this.separation_count === 2 && i === 3) {
                         b.spin_axis = vec3(0.5, 0, -0.75);
-                        b.angular_velocity = .1;
+                        b.angular_velocity = .01;
                     } else if (this.separation_count === 3 && i === 2) {
                         b.spin_axis = vec3(-0.95, 0, 0.30);
-                        b.angular_velocity = .1;
+                        b.angular_velocity = .01;
                     } else if (this.separation_count === 4 && i === 1) {
                         b.spin_axis = vec3(0.5, 0, 0.5);
-                        b.angular_velocity = .1;
+                        b.angular_velocity = .01;
                     } else {
-                        b.angular_velocity += b.angular_acceleration * dt;
+                        b.angular_velocity += b.angular_acceleration * dt / 1000;
                     }
                 }
             }
@@ -515,7 +549,7 @@ class Main_Scene extends Simulation {
                 switch (this.separation_count) {
                     case 0:
                         if (this.fuel_cap1 > 0) {
-                            this.fuel_cap1 -= (dt / 10);
+                            this.fuel_cap1 -= (dt / 100);
                         } else {
                             this.currently_firing = false;
                             this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
@@ -523,7 +557,7 @@ class Main_Scene extends Simulation {
                         break;
                     case 1:
                         if (this.fuel_cap2 > 0) {
-                            this.fuel_cap2 -= (dt / 10);
+                            this.fuel_cap2 -= (dt / 100);
                         } else {
                             this.currently_firing = false;
                             this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
@@ -531,7 +565,7 @@ class Main_Scene extends Simulation {
                         break;
                     case 2:
                         if (this.fuel_cap3 > 0) {
-                            this.fuel_cap3 -= (dt / 10);
+                            this.fuel_cap3 -= (dt / 100);
                         } else {
                             this.currently_firing = false;
                             this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
@@ -539,7 +573,7 @@ class Main_Scene extends Simulation {
                         break;
                     case 3:
                         if (this.fuel_cap4 > 0) {
-                            this.fuel_cap4 -= (dt / 10);
+                            this.fuel_cap4 -= (dt / 100);
                         } else {
                             this.currently_firing = false;
                             this.bodies[this.bottom_body].shapes[this.bodies[this.bottom_body].shapes.length - 1].enabled = false;
@@ -549,10 +583,8 @@ class Main_Scene extends Simulation {
             }
         }
 
-        this
-            .just_detached = false;
-        this
-            .just_activated = false;
+        this.just_detached = false;
+        this.just_activated = false;
     }
 
     check_collisions() {
@@ -627,7 +659,7 @@ class Main_Scene extends Simulation {
                 this.bodies[this.bottom_body].center[2],
                 1), color(1, 0.682, 0.259, 1), 10000);
         } else {
-            program_state.lights[1] = new Light(vec4(0, 0, 0, 1),
+            program_state.lights[1] = new Light(vec4(0, -100, 0, 1),
                 color(1, 0.682, 0.259, 1), 0);
         }
 
@@ -658,8 +690,8 @@ class Main_Scene extends Simulation {
             this.bridge_scale = Mat4.scale(Math.max(1 - .2 * t, 0), 1, 1)
         }
         this.shapes["payload_bridge"].draw(context, program_state, Mat4.translation(-22, 65, 0).times(this.bridge_scale), this.metal_material);
-        this.shapes["stable_bridge"].draw(context, program_state, Mat4.translation(-22, 40, 0).times(this.bridge_scale), this.metal_material);
-        this.shapes["elevator"].draw(context, program_state, Mat4.translation(-18, -2, 0), this.rocket_material);
+        this.shapes["stable_bridge"].draw(context, program_state, Mat4.translation(-22, 38, 0).times(this.bridge_scale), this.metal_material);
+        this.shapes["elevator"].draw(context, program_state, Mat4.translation(-18, -2, 0), this.platform_material);
 
         // Color endpoints of the linear interpolation
         let sky_blue = vec4(0.443, 0.694, 0.91, 1);

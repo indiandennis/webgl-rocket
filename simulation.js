@@ -66,7 +66,7 @@ class Simulation extends Scene {                                         // **Si
 
     display(context, program_state) {                                     // display(): advance the time and state of our whole simulation.
         if (program_state.animate)
-            this.simulate(program_state.animation_delta_time / 1000);
+            this.simulate(program_state.animation_delta_time);
         // Draw each shape at its current location:
         for (let b of this.bodies) {
             if (b.enabled)
