@@ -56,8 +56,6 @@ class Main_Scene extends Simulation {
             metal: new Texture("assets/textures/metal.jpg"),
             earth: new Texture("assets/textures/earth.png", "LINEAR_MIPMAP_LINEAR"),
             body: new Texture("assets/textures/stage-2-body.png"),
-
-            // TODO: TEXTURES
             sky: new Texture("assets/textures/gradient.png", "LINEAR_MIPMAP_LINEAR"),
             space: new Texture("assets/textures/space.png", "LINEAR_MIPMAP_LINEAR"),
             sun: new Texture("assets/textures/sun-from-earth.png"),
@@ -157,7 +155,6 @@ class Main_Scene extends Simulation {
             texture: this.textures.earth,
         });
 
-        // TODO: MATERIALS
         this.sky_material = new Material(new defs.Textured_Phong(), {
             color: color(0.443, 0.694, 0.91, 1),
             ambient: 1,
@@ -284,10 +281,8 @@ class Main_Scene extends Simulation {
         this.camera_offset = Mat4.translation(0, 0, 200);
         this.movement_transform = Mat4.identity();
 
-        // TODO: LINEAR INTERPOLATION FOR SKY COLOR
         this.color_lerp = 0;
 
-        // TODO: SEPARATION STAGE ANIMATION FLAGS
         this.separation_count = 0;
         this.booster_count = 0;
         this.booster_angles = [
@@ -304,10 +299,8 @@ class Main_Scene extends Simulation {
 
         this.bridge_scale = Mat4.identity();
 
-        // TODO: CHECK IF ENGINES ARE FIRING
         this.currently_firing = false;
 
-        // TODO: BOOSTER FUEL CAPACITY
         this.fuel_cap1 = 30;
         this.fuel_cap2 = 40;
         this.fuel_cap3 = 40;
@@ -423,7 +416,6 @@ class Main_Scene extends Simulation {
                         b.linear_velocity = b.linear_velocity.plus(vec3(0, -9.8, 0).times(dt / 100));
                         b.angular_acceleration = 0;
 
-                        // TODO: ANIMATE DRIFTING OF DEBRIS
                         if (this.just_detached) {
                             switch (i) {
                                 case 1:
@@ -458,8 +450,6 @@ class Main_Scene extends Simulation {
                             }
                         }
 
-
-                        // TODO: ANIMATE ROTATION OF DEBRIS
                         if (this.separation_count === 1 && i > 3 && i < 10) {
                             switch (this.booster_angles[this.booster_count]) {
                                 case 0:
@@ -599,10 +589,8 @@ class Main_Scene extends Simulation {
 
 
         //can move this stuff to the constructor if it doesn't change by t (but it probably will)
-        // TODO: SUNLIGHT
         program_state.lights = [new Light(vec4(100, 500, 250, 0), color(1, 1, 1, 1), 1000000)];
 
-        // TODO: BOOSTER LIGHTS
         if (this.currently_firing) {
             program_state.lights[1] = (new Light(vec4(
                 this.bodies[this.bottom_body].center[0],
@@ -646,7 +634,7 @@ class Main_Scene extends Simulation {
         this.shapes["payload_bridge"].draw(context, program_state, Mat4.translation(-22, 65, 0).times(this.bridge_scale), this.metal_material);
         this.shapes["stable_bridge"].draw(context, program_state, Mat4.translation(-22, 40, 0).times(this.bridge_scale), this.metal_material);
         this.shapes["elevator"].draw(context, program_state, Mat4.translation(-18, -2, 0), this.rocket_material);
-        // TODO: DRAW SKY, SPACE, AND SUN
+
         // Color endpoints of the linear interpolation
         let sky_blue = vec4(0.443, 0.694, 0.91, 1);
         //let space_black = vec4(0.122, 0.349, 0.722, 0);
