@@ -1,8 +1,9 @@
 # Team Rocket - A Simulated Rocket Launch
 __Team Members: Ameya Thakur, Jason Lai, Xiangkun Zhao__
 
-![image](https://user-images.githubusercontent.com/5963035/70021061-24591a00-1544-11ea-9998-62ba3f288e4e.png)
-> Rocket on launchpad before launch begins
+![launch](https://user-images.githubusercontent.com/5963035/70024040-0d1f2a00-154e-11ea-9dec-8e951a3162e9.gif)
+
+To run this project, clone or download the repository (it's large, we left in the raw files used to create the models and textures), and run a webserver in the root project directory (or run host.command or host.bat).
 ## Project Controls:
 
 | Action                       | Input         |
@@ -34,16 +35,13 @@ In order to handle the physically based simulation of objects and the states of 
 
 I also created many of the graphical features in our project. I created a billboarded particle shader based on a tutorial (cited) that I restructured and modified heavily to work with TinyGraphics and the scene graph structure I created. This particle shader simulates the explosion effects entirely on the GPU by generating a fixed array of velocities and spread offsets at construction, which are then copied to GPU buffers. The particles are billboarded quads with a custom texture, which are billboarded by scaling the x and y coordinates of the corners according to the camera up and right vectors. The shader takes animation time as an input so that it can move the particles to different locations based on their velocities depending on how much time has passed. The shader also transitions the color of the particles from a bright yellow-white through orange to light grey to give the effect of a stylized rocket exhaust. In addition to the particle shader, I created a billboarded explosion shader. 
 
-![image2](https://user-images.githubusercontent.com/5963035/70021530-e1984180-1545-11ea-92a9-11ff9bc5f851.png)
-> Explosion shader: The explosions are created at the locations of collisions and are animated for 4 seconds at 25 FPS
-
 This shader uses the same technique for billboarding, but uses multiple texture atlases to animate between 100 frames over the 4 seconds that it exists. By taking time since the enabling of the explosion as input, the current texture atlas and selection of the texture atlas used to shade the fragments of the billboarded quad can be changed once every 1/25 seconds, resulting in a realistic animated explosion. In addition, I created a modified plain texture shader to take the brightness of a grayscale image as it’s transparency, which allowed us to use NASA’s non-transparent Blue Marble cloud layer image to texture the cloud layer in our simulation. I also modelled the rocket and created textures to apply to the rocket shapes and launchpad.
 
 Finally, I created a custom camera module based on the one provided in TinyGraphics that stays attached to the rocket and allows rotation around the rocket based on clicking and dragging. This allows for less confusing mouse control by only moving when the user moves their mouse instead of continuously moving when the mouse is moved from the click location, like the example does. I also added zoom to the camera using the scroll wheel (or touchpad) by capturing the wheel event and increasing or decreasing the z axis offset of the camera. 
 
 
 ## Jason Lai
-![image1](https://user-images.githubusercontent.com/5963035/70021512-d5ac7f80-1545-11ea-9c96-681a1a1b0134.png)
+![separation](https://user-images.githubusercontent.com/5963035/70024403-d5fd4880-154e-11ea-93e2-4fbdd458a4bd.gif)
 > Stage separation: On detach, each body separates away from the main rocket realistically
 
 
@@ -55,7 +53,7 @@ Finally, I created a custom camera module based on the one provided in TinyGraph
 
 ## Xiangkun Zhao
 
-![image3](https://user-images.githubusercontent.com/5963035/70021524-dd6c2400-1545-11ea-94d8-2dadcab67217.png)
+![collision](https://user-images.githubusercontent.com/5963035/70024701-b581be00-154f-11ea-8e35-241153802805.gif)
 > Collision detection between bodies
 
 To simulate and to detect the collision between objects and ground or objects with each other, we used a standard axis aligned bounding box. At first, we simply used the variable center that stores the location of the moving objects from the body class and adds with some offset based on the model to create the hitbox. Later, we modeled the boosters of the rocket to be spinning at an angle, so another more general function is specifically made to calculate the hitbox of objects that are in any type of motion by multiplying the drawn location matrix to all 8 vertices of the bounding box, and then creating a new axis aligned bounding box containing the transformed hitbox.
