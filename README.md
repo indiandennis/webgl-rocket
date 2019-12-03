@@ -39,18 +39,19 @@ Finally, I created a custom camera module based on the one provided in TinyGraph
 In developing the simulation, I created the sky color transition, animated the debris at each separation stage, created the mechanics for the rocket’s fuel capacity, and also adjusted the physics for the simulation to be smoother and faster. For the sky color transition, I used linear interpolation to interpolate between the vector RGB values of the sky blue color we use when the rocket is at the ground, and the black RGB vector for when the rocket is in space. To do this, I referenced Wikipedia page for the precise method of linear interpolation, and adapted the given function to work in our render loop with the interpolating variable being the height of the rocket. I restrict a range between 30,000 and 70,000 and normalize it to be between 0 and 1, so that when the rocket is at or below 30,000 units, the sky’s color is blue, and when it is at or above 70,000 units, the sky’s color is black, and anything in between is a blended color using the linear interpolation equation. 
 
 
-![separation](https://user-images.githubusercontent.com/5963035/70024403-d5fd4880-154e-11ea-93e2-4fbdd458a4bd.gif)
-> Stage separation: On detach, each body separates away from the main rocket realistically
+![image4](https://user-images.githubusercontent.com/5963035/70021539-e957e600-1545-11ea-9a5d-90c76534477d.png)
 
 For the animation of the debris, I used the linear velocity, spin axis, and angular velocity attributes of the rocket body objects to make them rotate and drift apart upon separating; these attributes come from the simulation example of TinyGraphics. To do this I initialize some variables in the scene’s constructor, and set a flag when the action key is hit to initiate a separation stage. At this point, I have one code block check which body object of the rocket is the bottommost one using a counter and use a switch statement to apply the appropriate linear velocity, as well as spin axis if it is one of the six primary boosters; this handles the drifting of the debris. I then use a second code block to handle applying the angular velocity to the debris to make them rotate. I also adjusted the delta time values for some of the physics in the simulation to speed them up and make them smoother for our demo; this entails changing the value by which dt is divided by in some of the body object attributes.
 
-![image5](https://user-images.githubusercontent.com/5963035/70021551-efe65d80-1545-11ea-993d-59e55d9396a9.png)
+
+![separation](https://user-images.githubusercontent.com/5963035/70024403-d5fd4880-154e-11ea-93e2-4fbdd458a4bd.gif)
+> Stage separation: On detach, each body separates away from the main rocket realistically
 
 Furthermore, I handled attaching the point-light to the base of the rocket when its boosters are currently firing. To do this, I declared a flag in the constructor that is set when the action key is pressed to start the rocket’s boosters; then in the display function, I check whether or not a booster is activated and attach a point-light at the bottommost body of the rocket by declaring a new light object in the lights array. This point light is then rendered indefinitely until the user initiates a premature separation or the rocket’s boosters run out of fuel. For the rocket’s fuel capacity, I declared four variables in the constructor, one for each stage of the rocket, and set them to numerical values representing their initial fuel amount. Then, when we update the state of the rocket, I check whether or not a booster of the rocket is currently firing and use a switch statement to determine which stage of the rocket we are currently at. I then decrement the fuel capacity for that stage of the rocket accordingly by a fraction of the provided delta time value. Once the fuel for the current stage is depleted, I switch the state of the rocket’s firing mode to false, and turn off the animations/shader for the rocket’s exhaust.
 
-![image4](https://user-images.githubusercontent.com/5963035/70021539-e957e600-1545-11ea-9a5d-90c76534477d.png)
-
 Lastly, I handled the fine-tuning for some of the objects in the scene, such as the texturing and scaling of the spheres that act as our sky and clouds, and also creating the square plane for the sun. I transformed the sun, so that at its offset and height, its projection would face the camera’s line-of-sight almost square on to give the appearance of being a spherical, modeled sun. The fine-tuning for the scaling and position of the objects simply utilized the TinyGraphics API to do matrix and vector transformations. In addition to the environment, I also modeled the launchpad and tower objects in Blender 2.8 using the software’s scaling, translating, and shearing functions, and created the sky texture using the gradient function in Photoshop CS6.
+
+![image5](https://user-images.githubusercontent.com/5963035/70021551-efe65d80-1545-11ea-993d-59e55d9396a9.png)
 
 
 ## Xiangkun Zhao
@@ -70,5 +71,6 @@ To simulate and to detect the collision between objects and ground or objects wi
 * [NASA Blue Marble Earth Images](https://visibleearth.nasa.gov/collection/1484/blue-marble)
 * [Concrete Texture](https://opengameart.org/node/27640)
 * [Linear Interpolation Wiki](https://en.wikipedia.org/wiki/Linear_interpolation)
+* [Tiny Graphics Library and Examples](https://github.com/encyclopedia-of-code/tiny-graphics-js)
 
 
