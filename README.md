@@ -1,5 +1,6 @@
 # Team Rocket - A Simulated Rocket Launch
 https://github.com/indiandennis/webgl-rocket
+
 __Team Members: Ameya Thakur, Jason Lai, Xiangkun Zhao__
 
 ![launch](https://user-images.githubusercontent.com/5963035/70024040-0d1f2a00-154e-11ea-9dec-8e951a3162e9.gif)
